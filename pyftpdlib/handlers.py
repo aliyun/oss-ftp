@@ -307,7 +307,6 @@ class PassiveDTP(Acceptor):
     # --- connection / overridden
 
     def handle_accepted(self, sock, addr):
-        print "!!mark!! client syn"
         """Called when remote client initiates a connection."""
         if not self.cmd_channel.connected:
             return self.close()

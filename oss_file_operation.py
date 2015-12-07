@@ -5,6 +5,7 @@ import pdb
 import os
 
 import oss2
+from oss2.exceptions import *
 
 class OssFileOperation:
     size_cache = {}
@@ -18,6 +19,9 @@ class OssFileOperation:
         self.buflimit = 10 * 1024 * 1024
         self.closed = False
         self.name = self.bucket.bucket_name + '/' + self.object
+        self.upload_id = None
+        self.max_retry_times = 3
+        self.contents = None
 
     def stripFirstDelimiter(self, path):
         while path.startswith('/'):
@@ -25,29 +29,39 @@ class OssFileOperation:
         return path
     
     def get_upload_id(self):
-        try:
+        if self.upload_id:
             return self.upload_id
-        except:
-            resp = self.bucket.init_multipart_upload(self.object)
-            if resp.status == 200:
+        retry = self.max_retry_times
+        while retry > 0:
+            retry -= 1
+            try:
+                resp = self.bucket.init_multipart_upload(self.object)
                 self.upload_id = resp.upload_id
                 self.partNum = 0
                 return self.upload_id
+            except OssError as e:
+                status = e.status
+                code = e.code
+                print "init_multipart_upload error, code:%s, status:%s" % (code, status)
         return None
-    
+
     def send_buf(self):
         upload_id = self.get_upload_id()
         assert upload_id != None
         if self.buf == '':
             return
         self.partNum += 1
-        retry = 3
+        retry = self.max_retry_times
         while retry > 0:
             retry -= 1
-            resp = self.bucket.upload_part(self.object, upload_id, self.partNum, self.buf)
-            if resp.status / 100 == 2:
+            try:
+                resp = self.bucket.upload_part(self.object, upload_id, self.partNum, self.buf)
                 self.buf = ''
-                break
+                return
+            except OssError as e:
+                status = e.status
+                code = e.code
+                print "upload_part error, code:%s, status:%s" % (code, status)
         
     def write(self, data):
         while len(data) + len(self.buf) > self.buflimit:
@@ -59,34 +73,58 @@ class OssFileOperation:
         
     def close(self):
         assert self.closed == False
-        try:
-            self.upload_id
-        except:
-            retry = 3
+        if not self.upload_id:
+            retry = self.max_retry_times
             while retry > 0:
                 retry -= 1
-                resp = self.bucket.put_object(self.object, self.buf)
-                if resp.status / 100 == 2:
+                try:
+                    resp = self.bucket.put_object(self.object, self.buf)
                     return
+                except OssError as e:
+                    status = e.status
+                    code = e.code
+                    print "put_object error, code:%s, status:%s" % (code, status)
             return
         
         self.send_buf()
         upload_id = self.get_upload_id()
-        res = self.bucket.list_parts(self.object, upload_id)
-        parts = res.parts
-        retry = 3
+        retry = self.max_retry_times
+        list_ok = False
         while retry > 0:
             retry -= 1
-            resp = self.bucket.complete_multipart_upload(self.object, upload_id, parts)
-            if resp.status / 100 == 2:
+            try:
+                res = self.bucket.list_parts(self.object, upload_id)
+                parts = res.parts
+                list_ok = True
                 break
+            except OssError as e:
+                status = e.status
+                code = e.code
+                print "list_parts error, code:%s, status:%s" % (code, status)
+        if not list_ok:
+            print "list failed exceed the max_retry_times"
+            return
+
+        retry = self.max_retry_times
+        complete_ok = False
+        while retry > 0:
+            retry -= 1
+            try:
+                resp = self.bucket.complete_multipart_upload(self.object, upload_id, parts)
+                complete_ok = True
+                break
+            except OssError as e:
+                status = e.status
+                code = e.code
+                print "complete_multipart_upload  error, code:%s, status:%s" % (code, status)
+        if not complete_ok:
+            print "complete_multipart_upload failed exceed the max_retry_times"
+            return
         self.closed = True
     
     def listdir(self):
-        try:
+        if self.contents:
             return self.contents
-        except:
-            pass
         object = self.object
         if object != '' and not object.endswith('/'):
             object = object + '/'
@@ -140,32 +178,67 @@ class OssFileOperation:
         value = self.cache_get(self.size_cache, (self.bucket.bucket_name, self.object))
         if value != None:
             return value
-        resp = self.bucket.head_object(self.object)
         content_len = 0
-        if (resp.status / 100) == 2:
+        try:
+            resp = self.bucket.head_object(self.object)
             content_len = resp.headers['content-length']
             self.cache_set(self.size_cache, (self.bucket.bucket_name, self.object), content_len)
+        except OssError as e:
+            status = e.status
+            code = e.code
+            print "head object failed, code:%s, status:%s" % (code, status)
         return content_len
     
     def open_read(self):
-        resp = self.bucket.get_object(self.object)
-        resp.name = self.bucket.bucket_name + '/' + self.object 
-        return resp
-     
+        retry = self.max_retry_times
+        while retry > 0:
+            retry -= 1
+            try:
+                resp = self.bucket.get_object(self.object)
+                resp.name = self.bucket.bucket_name + '/' + self.object 
+                return resp
+            except OssError as e:
+                status = e.status
+                code = e.code
+                print "get object faild, code: %s, status: %s" % (code, status)
+        return None
+         
     def mkdir(self):
         object = self.object
         if not object.endswith('/'):
             object = object + '/'
-        resp = self.bucket.put_object(object, "Dir")
-        if resp.status/100 != 2:
-           print "creating dir %s failed." % object 
-        
+        retry = self.max_retry_times
+        while retry > 0:
+            retry -= 1
+            try:
+                resp = self.bucket.put_object(object, "Dir")
+            except OssError as e:
+                status = e.status
+                code = e.code
+                print "creating dir %s failed, code:%s, status:%s" % (object, code, status)
+            
     def rmdir(self):
         object = self.object
         if not object.endswith('/'):
             object = object + '/'
-        self.bucket.delete_object(object)
-        
+        retry = self.max_retry_times
+        while retry > 0:
+            retry -= 1
+            try:
+                self.bucket.delete_object(object)
+            except OssError as e:
+                status = e.status
+                code = e.code
+                print "rm dir %s failed, code:%s, status:%s" % (object, code, status)
+
     def remove(self):
         object = self.object
-        self.bucket.delete_object(object)
+        retry = self.max_retry_times
+        while retry > 0:
+            retry -= 1
+            try:
+                self.bucket.delete_object(object)
+            except OssError as e:
+                status = e.status
+                code = e.code
+                print "rm object %s failed, code:%s, status:%s" % (object, code, status)
