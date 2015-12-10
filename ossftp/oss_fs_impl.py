@@ -1,4 +1,5 @@
-from oss_file_operation import *
+from . import oss_file_operation
+import oss2
 
 class OssFsImpl:
    
@@ -117,34 +118,34 @@ class OssFsImpl:
         return object
 
     def open_read(self, path):
-        return OssFileOperation(self.get_bucket(path), self.get_object(path)).open_read()
+        return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path)).open_read()
     
     def open_write(self, path):
-        return OssFileOperation(self.get_bucket(path), self.get_object(path))
+        return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path))
     
     def mkdir(self, path):
-        return OssFileOperation(self.get_bucket(path), self.get_object(path)).mkdir()
+        return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path)).mkdir()
         
     def listdir(self, path):
-        return OssFileOperation(self.get_bucket(path), self.get_object(path)).listdir()
+        return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path)).listdir()
     
     def rmdir(self, path):
-        return OssFileOperation(self.get_bucket(path), self.get_object(path)).rmdir()
+        return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path)).rmdir()
     
     def remove(self, path):
-        return OssFileOperation(self.get_bucket(path), self.get_object(path)).remove()
+        return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path)).remove()
     
     def rename(self, path1, path2):
         pass
     
     def getsize(self, path):
-        return OssFileOperation(self.get_bucket(path), self.get_object(path)).getsize()
+        return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path)).getsize()
     ##not implement
     def getmodify(self, path):
-        return OssFileOperation(self.get_bucket(path), self.get_object(path)).getmodify()
+        return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path)).getmodify()
     
     def isfile(self, path):
-        return OssFileOperation(self.get_bucket(path), self.get_object(path)).isfile()
+        return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path)).isfile()
     
     def isdir(self, path):
         path = self.normalizeSeparateChar(path)
@@ -152,4 +153,4 @@ class OssFsImpl:
             return True
         if self.isRoot(path):
             return True
-        return OssFileOperation(self.get_bucket(path), self.get_object(path)).isdir()
+        return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path)).isdir()

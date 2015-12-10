@@ -1,5 +1,5 @@
 OSS FTP Server
 =========
-provide FTP Service base on Aliyun OSS
+FTP Tool base on Aliyun OSS
 
-Need to add more info
+requires such python libs: oss2, pyftpdlib, pyOpenSSL

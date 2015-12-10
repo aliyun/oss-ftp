@@ -3,6 +3,7 @@ import time
 import datetime
 import pdb
 import os
+import types
 
 import oss2
 from oss2.exceptions import *
@@ -195,7 +196,11 @@ class OssFileOperation:
             retry -= 1
             try:
                 resp = self.bucket.get_object(self.object)
-                resp.name = self.bucket.bucket_name + '/' + self.object 
+                resp.name = self.bucket.bucket_name + '/' + self.object
+                resp.closed = False
+                def close(self):
+                    pass
+                resp.close = types.MethodType(close, resp) 
                 return resp
             except OssError as e:
                 status = e.status

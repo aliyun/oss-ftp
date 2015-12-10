@@ -45,7 +45,9 @@ import oss2
 class OssAuthorizer(DummyAuthorizer):
     read_perms = "elr"
     write_perms = "adfmwM"
+    location = "oss-cn-hangzhou"
     endpoint = "oss-cn-hangzhou.aliyuncs.com"
+    internal = False
     
     def __init__(self):
         self.bucket_info_table = {}
@@ -115,12 +117,32 @@ class OssAuthorizer(DummyAuthorizer):
         if bucket_name in self.bucket_info_table:
             del self.bucket_info_table[bucket_name]
 
+    def get_bucket_endpoint(self, bucket_name, access_id, access_key):
+        """Get bucket endpoint """
+        general_endpoint = "oss-cn-hangzhou.aliyuncs.com"
+        service = oss2.Service(oss2.Auth(),) 
+
+    def get_endpoint_from_location(self, location):
+        internal_str = ""
+        if self.internal:
+            internal_str = "-internal"
+        endpoint = location + internal_str + ".aliyuncs.com"
+        return endpoint
+
     def _check_loggin(self, bucket_name, endpoint, access_id, access_key):
-        bucket = oss2.Bucket(oss2.Auth(access_id, access_key), endpoint, bucket_name)
-        res = bucket.get_bucket_location()
-        if res.status / 100 != 2:
-            raise ValueError('access_id %s, access_key %s not match for bucket %s' % (access_id, access_key, bucket_name))
-        self.put_bucket_info(bucket_name, endpoint, access_id, access_key)
+        try:
+            service = oss2.Service(oss2.Auth(access_id, access_key), endpoint)
+            res = service.list_buckets(prefix=bucket_name)
+            bucket_list = res.buckets
+            for bucket in bucket_list:
+                if bucket.name == bucket_name:
+                    self.location = bucket.location
+                    self.endpoint = self.get_endpoint_from_location(self.location)
+                    self.put_bucket_info(bucket_name, endpoint, access_id, access_key)
+                    return endpoint
+            raise ValueError("can't find the bucket %s when list buckets." % bucket_name) 
+        except OssError as e:
+            raise ValueError("get bucket:%s 's endpoint error: %s, status:%s, code:%s" % (bucket_name, e.status, e.code))
 
     def validate_authentication(self, username, password, handler):
         """Raises AuthenticationFailed if supplied username and
@@ -128,10 +150,10 @@ class OssAuthorizer(DummyAuthorizer):
         None.
         """
         bucket_name = self.parse_bucket_name(username)
-        endpoint = self.endpoint
         access_id = self.parse_access_id(username)
         access_key = password
-        self._check_loggin(bucket_name, endpoint, access_id, access_key)
+        general_endpoint = "oss-cn-hangzhou.aliyuncs.com"
+        location = self._check_loggin(bucket_name, general_endpoint, access_id, access_key)
 
     def get_home_dir(self, username):
         """Return the user's home directory.

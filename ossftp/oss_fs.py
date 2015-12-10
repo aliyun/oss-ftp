@@ -27,8 +27,7 @@
 #
 #  ======================================================================
 
-from pyftpdlib.filesystems import AbstractedFS
-from oss_fs_impl import *
+import os
 import sys
 import time
 import tempfile
@@ -39,6 +38,9 @@ from pyftpdlib.filesystems import FilesystemError
 from pyftpdlib._compat import PY3, u, unicode, property
 _months_map = {1:'Jan', 2:'Feb', 3:'Mar', 4:'Apr', 5:'May', 6:'Jun', 7:'Jul',
                8:'Aug', 9:'Sep', 10:'Oct', 11:'Nov', 12:'Dec'}
+
+from pyftpdlib.filesystems import AbstractedFS
+from . import oss_fs_impl 
 
 class OssFS(AbstractedFS):
     
@@ -58,7 +60,7 @@ class OssFS(AbstractedFS):
             bucket_name_without_slash = bucket_name_without_slash[1:]
         bucket_info_dict = cmd_channel.authorizer.get_bucket_info(bucket_name_without_slash)
         access_id, access_key = bucket_info_dict["access_key_dict"].items()[0]
-        self.oss_fs_impl = OssFsImpl(bucket_name, bucket_info_dict["endpoint"], access_id, access_key)
+        self.oss_fs_impl = oss_fs_impl.OssFsImpl(bucket_name, bucket_info_dict["endpoint"], access_id, access_key)
     
     def open(self, filename, mode):
         assert isinstance(filename, unicode), filename
@@ -105,7 +107,7 @@ class OssFS(AbstractedFS):
         
     def chmod(self, path, mode):
         assert isinstance(path, unicode), path
-        raise NotImplementedError
+        #raise NotImplementedError
     
     def getsize(self, path):
         assert isinstance(path, unicode), path
