@@ -29,7 +29,7 @@ def start_ftp(masquerade_address, port, internal):
 def main(args, opts):
     masquerade_address = ""
     port = 21
-    internal = False
+    internal = None
     if opts.masquerade_address:
         masquerade_address = opts.masquerade_address
     if opts.port:
@@ -39,7 +39,7 @@ def main(args, opts):
             print "invalid FTP port, please input a valid port like --port=21"
             return
     if opts.internal:
-        internal = ots.internal
+        internal = opts.internal
     start_ftp(masquerade_address, port, internal)
     
 if __name__ == '__main__':

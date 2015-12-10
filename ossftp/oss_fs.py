@@ -47,12 +47,6 @@ class OssFS(AbstractedFS):
     def __init__(self, root, cmd_channel):
         AbstractedFS.__init__(self, root, cmd_channel)
         bucket_name = root
-        '''
-        if not bucket_name.startswith('/'):
-            bucket_name = '/' + bucket_name
-        if not bucket_name.endswith('/'):
-            bucket_name = bucket_name + '/'
-        '''
         bucket_name_without_slash = bucket_name
         if bucket_name_without_slash.endswith('/'):
             bucket_name_without_slash = bucket_name_without_slash[:-1]

@@ -1,5 +1,6 @@
-from . import oss_file_operation
 import oss2
+from . import oss_file_operation
+from . import defaults
 
 class OssFsImpl:
    
@@ -10,7 +11,7 @@ class OssFsImpl:
         self.access_id = access_id
         self.access_key = access_key
 
-        self.bucket = oss2.Bucket(oss2.Auth(self.access_id, self.access_key), self.endpoint, self.bucket_name)
+        self.bucket = oss2.Bucket(oss2.Auth(self.access_id, self.access_key), self.endpoint, self.bucket_name, app_name=defaults.app_name)
         
     def isBucket(self, path):
         phyPath = self.stripLastDelimiter(path)
@@ -109,7 +110,7 @@ class OssFsImpl:
     def get_bucket(self, path):
         path = self.normalizeSeparateChar(path)
         bucket_name = self.getOSSBucketName(path)
-        bucket = oss2.Bucket(oss2.Auth(self.access_id, self.access_key), self.endpoint, bucket_name)
+        bucket = oss2.Bucket(oss2.Auth(self.access_id, self.access_key), self.endpoint, bucket_name, app_name=defaults.app_name)
         return bucket
     
     def get_object(self, path):
