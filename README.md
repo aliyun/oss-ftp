@@ -9,6 +9,7 @@ It has a abstract file system over OSS, all incoming FTP Requests will operate o
 ## how to install?
 
 * install such dependence:
+
 ```bash      
 $ apt-get install libffi-dev
 $ apt-get install libssl-dev
@@ -20,7 +21,8 @@ $ yum install libffi
 $ yum install openssl-devel
 ```
 
-* download the package, and execute the following commd. 
+* download the package, and execute the following commd:
+
 ```bash
 $ python setup.py install
 ```
