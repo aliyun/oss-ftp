@@ -1,4 +1,4 @@
-from pyftpdlib._compat import PY3, u, unicode, property
+from pyftpdlib._compat import PY3, u, unicode
 import time
 import datetime
 import pdb
