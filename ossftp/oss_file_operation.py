@@ -221,6 +221,7 @@ class OssFileOperation:
                 status = e.status
                 code = e.code
                 print "creating dir %s failed, code:%s, status:%s" % (object, code, status)
+        self.cache_set(self.dir_cache, (self.bucket.bucket_name, self.object), True)
             
     def rmdir(self):
         object = self.object
@@ -235,6 +236,7 @@ class OssFileOperation:
                 status = e.status
                 code = e.code
                 print "rm dir %s failed, code:%s, status:%s" % (object, code, status)
+        self.cache_set(self.dir_cache, (self.bucket.bucket_name, self.object), False)
 
     def remove(self):
         object = self.object
