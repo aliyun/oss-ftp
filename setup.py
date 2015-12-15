@@ -27,7 +27,10 @@ setup(
     description='Aliyun OSS (Object Storage Service) ftp tool',
     long_description=readme,
     packages=['ossftp'],
-    install_requires=['oss2', 'pyOpenSSL', 'pyftpdlib'],
+    install_requires=['oss2>=2.0.3', 
+        'pyOpenSSL', 
+        'pyftpdlib>=1.5.0'
+        ],
     include_package_data=True,
     url='http://oss.aliyun.com',
     classifiers=[
