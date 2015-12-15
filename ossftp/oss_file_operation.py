@@ -1,4 +1,5 @@
 from pyftpdlib._compat import PY3, u, unicode
+from pyftpdlib.filesystems import FilesystemError
 import time
 import datetime
 import pdb
@@ -7,6 +8,7 @@ import types
 
 import oss2
 from oss2.exceptions import *
+from . import defaults
 
 class OssFileOperation:
     size_cache = {}
@@ -17,11 +19,11 @@ class OssFileOperation:
         self.bucket = bucket 
         self.object = self.stripFirstDelimiter(object)
         self.buf = ''
-        self.buflimit = 10 * 1024 * 1024
+        self.buflimit = defaults.send_data_buff_size
         self.closed = False
         self.name = self.bucket.bucket_name + '/' + self.object
         self.upload_id = None
-        self.max_retry_times = 3
+        self.max_retry_times = defaults.max_send_retry_times
         self.contents = None
 
     def stripFirstDelimiter(self, path):
@@ -33,6 +35,7 @@ class OssFileOperation:
         if self.upload_id:
             return self.upload_id
         retry = self.max_retry_times
+        status, code, request_id = "", "", ""
         while retry > 0:
             retry -= 1
             try:
@@ -41,10 +44,10 @@ class OssFileOperation:
                 self.partNum = 0
                 return self.upload_id
             except OssError as e:
-                status = e.status
-                code = e.code
-                print "init_multipart_upload error, code:%s, status:%s" % (code, status)
-        return None
+                status, code, request_id = e.status, e.code, e.request_id
+        raise FilesystemError("init_multi_upload failed. bucket:%s, object:%s, \
+                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                    self.object, request_id, code, status))
 
     def send_buf(self):
         upload_id = self.get_upload_id()
@@ -53,6 +56,7 @@ class OssFileOperation:
             return
         self.partNum += 1
         retry = self.max_retry_times
+        status, code, request_id = "", "", ""
         while retry > 0:
             retry -= 1
             try:
@@ -60,9 +64,10 @@ class OssFileOperation:
                 self.buf = ''
                 return
             except OssError as e:
-                status = e.status
-                code = e.code
-                print "upload_part error, code:%s, status:%s" % (code, status)
+                status, code, request_id = e.status, e.code, e.request_id
+        raise FilesystemError("upload part failed. bucket:%s, object:%s, partNum:%s\
+                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                    self.object, self.partNum, request_id, code, status))
         
     def write(self, data):
         while len(data) + len(self.buf) > self.buflimit:
@@ -76,20 +81,23 @@ class OssFileOperation:
         assert self.closed == False
         if not self.upload_id:
             retry = self.max_retry_times
+            status, code, request_id = "", "", ""
             while retry > 0:
                 retry -= 1
                 try:
                     resp = self.bucket.put_object(self.object, self.buf)
                     return
                 except OssError as e:
-                    status = e.status
-                    code = e.code
-                    print "put_object error, code:%s, status:%s" % (code, status)
-            return
+                    status, code, request_id = e.status, e.code, e.request_id
+            
+            raise FilesystemError("put object failed. bucket:%s, object:%s, \
+                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                    self.object, request_id, code, status))
         
         self.send_buf()
         upload_id = self.get_upload_id()
         retry = self.max_retry_times
+        status, code, request_id = "", "", ""
         list_ok = False
         while retry > 0:
             retry -= 1
@@ -99,15 +107,15 @@ class OssFileOperation:
                 list_ok = True
                 break
             except OssError as e:
-                status = e.status
-                code = e.code
-                print "list_parts error, code:%s, status:%s" % (code, status)
+                status, code, request_id = e.status, e.code, e.request_id
         if not list_ok:
-            print "list failed exceed the max_retry_times"
-            return
+            raise FilesystemError("list parts failed. bucket:%s, object:%s, \
+                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                    self.object, request_id, code, status))
 
         retry = self.max_retry_times
         complete_ok = False
+        status, code, request_id = "", "", ""
         while retry > 0:
             retry -= 1
             try:
@@ -115,12 +123,11 @@ class OssFileOperation:
                 complete_ok = True
                 break
             except OssError as e:
-                status = e.status
-                code = e.code
-                print "complete_multipart_upload  error, code:%s, status:%s" % (code, status)
+                status, code, request_id = e.status, e.code, e.request_id
         if not complete_ok:
-            print "complete_multipart_upload failed exceed the max_retry_times"
-            return
+            raise FilesystemError("complete_multipart_upload failed. bucket:%s, \
+                    object:%s, upload_id:%s, request_id:%s, code:%s, status:%s" \
+                    % (self.bucket.bucket_name, self.object, upload_id, request_id, code, status))
         self.closed = True
     
     def listdir(self):
@@ -185,13 +192,14 @@ class OssFileOperation:
             content_len = resp.headers['content-length']
             self.cache_set(self.size_cache, (self.bucket.bucket_name, self.object), content_len)
         except OssError as e:
-            status = e.status
-            code = e.code
-            print "head object failed, code:%s, status:%s" % (code, status)
+            raise FilesystemError("head object failed. bucket:%s, object:%s, \
+                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                    self.object, self.request_id, self.code, self.status))
         return content_len
     
     def open_read(self):
         retry = self.max_retry_times
+        status, code, request_id = "", "", ""
         while retry > 0:
             retry -= 1
             try:
@@ -203,40 +211,46 @@ class OssFileOperation:
                 resp.close = types.MethodType(close, resp) 
                 return resp
             except OssError as e:
-                status = e.status
-                code = e.code
-                print "get object faild, code: %s, status: %s" % (code, status)
-        return None
+                status, code, request_id = e.status, e.code, e.request_id
+        raise FilesystemError("get object failed. bucket:%s, object:%s, \
+                request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                self.object, request_id, code, status))
          
     def mkdir(self):
         object = self.object
         if not object.endswith('/'):
             object = object + '/'
         retry = self.max_retry_times
+        status, code, request_id = "", "", ""
         while retry > 0:
             retry -= 1
             try:
                 resp = self.bucket.put_object(object, "Dir")
+                self.cache_set(self.dir_cache, (self.bucket.bucket_name, self.object), True)
+                return
             except OssError as e:
-                status = e.status
-                code = e.code
-                print "creating dir %s failed, code:%s, status:%s" % (object, code, status)
-        self.cache_set(self.dir_cache, (self.bucket.bucket_name, self.object), True)
+                status, code, request_id = e.status, e.code, e.request_id
+        raise FilesystemError("put object/dir failed. bucket:%s, object:%s, \
+                request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                object, request_id, code, status))
             
     def rmdir(self):
         object = self.object
         if not object.endswith('/'):
             object = object + '/'
         retry = self.max_retry_times
+        status, code, request_id = "", "", ""
         while retry > 0:
             retry -= 1
             try:
                 self.bucket.delete_object(object)
+                self.cache_set(self.dir_cache, (self.bucket.bucket_name, self.object), False)
+                return
             except OssError as e:
-                status = e.status
-                code = e.code
-                print "rm dir %s failed, code:%s, status:%s" % (object, code, status)
-        self.cache_set(self.dir_cache, (self.bucket.bucket_name, self.object), False)
+                status, code, request_id = e.status, e.code, e.request_id
+        raise FilesystemError("delete object/dir failed. bucket:%s, object:%s, \
+                request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                object, request_id, code, status))
 
     def remove(self):
         object = self.object
@@ -246,6 +260,7 @@ class OssFileOperation:
             try:
                 self.bucket.delete_object(object)
             except OssError as e:
-                status = e.status
-                code = e.code
-                print "rm object %s failed, code:%s, status:%s" % (object, code, status)
+                status, code, request_id = e.status, e.code, e.request_id
+        raise FilesystemError("delete object failed. bucket:%s, object:%s, \
+                request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                object, request_id, code, status))

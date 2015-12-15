@@ -1,32 +1,3 @@
-#coding=utf-8
-#  ======================================================================
-#  Copyright (C) 2007-2013 Giampaolo Rodola' <g.rodola@gmail.com>
-#
-#                         All Rights Reserved
-#
-# Permission is hereby granted, free of charge, to any person
-# obtaining a copy of this software and associated documentation
-# files (the "Software"), to deal in the Software without
-# restriction, including without limitation the rights to use,
-# copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following
-# conditions:
-#
-# The above copyright notice and this permission notice shall be
-# included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-# OTHER DEALINGS IN THE SOFTWARE.
-#
-#  ======================================================================
-
 import os
 import sys
 import time
@@ -46,13 +17,8 @@ class OssFS(AbstractedFS):
     
     def __init__(self, root, cmd_channel):
         AbstractedFS.__init__(self, root, cmd_channel)
-        bucket_name = root
-        bucket_name_without_slash = bucket_name
-        if bucket_name_without_slash.endswith('/'):
-            bucket_name_without_slash = bucket_name_without_slash[:-1]
-        if bucket_name_without_slash.startswith('/'):
-            bucket_name_without_slash = bucket_name_without_slash[1:]
-        bucket_info_dict = cmd_channel.authorizer.get_bucket_info(bucket_name_without_slash)
+        bucket_name = root.strip('/')
+        bucket_info_dict = cmd_channel.authorizer.get_bucket_info(bucket_name)
         access_id, access_key = bucket_info_dict["access_key_dict"].items()[0]
         self.oss_fs_impl = oss_fs_impl.OssFsImpl(bucket_name, bucket_info_dict["endpoint"], access_id, access_key)
     

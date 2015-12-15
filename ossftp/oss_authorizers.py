@@ -1,40 +1,9 @@
 #!/usr/bin/env python
-# $Id: authorizers.py 1171 2013-02-19 10:13:09Z g.rodola $
-
-#  ======================================================================
-#  Copyright (C) 2007-2013 Giampaolo Rodola' <g.rodola@gmail.com>
-#
-#                         All Rights Reserved
-#
-# Permission is hereby granted, free of charge, to any person
-# obtaining a copy of this software and associated documentation
-# files (the "Software"), to deal in the Software without
-# restriction, including without limitation the rights to use,
-# copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following
-# conditions:
-#
-# The above copyright notice and this permission notice shall be
-# included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-# WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-# OTHER DEALINGS IN THE SOFTWARE.
-#
-#  ======================================================================
 from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.authorizers import AuthenticationFailed
 from pyftpdlib.authorizers import AuthorizerError
 from pyftpdlib._compat import PY3, unicode, getcwdu
 
-import xml.etree.ElementTree as ET
-import json
 import os
 import warnings
 import errno
@@ -48,50 +17,27 @@ from . import defaults
 class OssAuthorizer(DummyAuthorizer):
     read_perms = "elr"
     write_perms = "adfmwM"
-    location = "oss-cn-hangzhou"
-    endpoint = "oss-cn-hangzhou.aliyuncs.com"
+    default_location = "oss-cn-hangzhou"
+    default_endpoint = "oss-cn-hangzhou.aliyuncs.com"
     internal = None
     
     def __init__(self):
         self.bucket_info_table = {}
-        self.expire_time = 60
-        self.error_bucket_expire_time = 10
+        self.expire_time = 10
+        self.error_bucket_expire_time = 5
 
-    def print_red(self, content):
-        atrr = 1
-        fore = 31
-        color = "\x1B[%d;%dm" % (atrr,fore)
-        print "%s%s\x1B[0m" % (color, content)
-
-    def print_green(self, content):
-        atrr = 1
-        fore = 32
-        color = "\x1B[%d;%dm" % (atrr,fore)
-        print "%s%s\x1B[0m" % (color, content)
-
-    def check_res(self, res, msg):
-        if res.status / 100 != 2:
-            self.print_red ('Error: %s error. ret:%s, req-id:%s, reason is:' % (msg, res.status, res.getheader("x-oss-request-id")))
-            print res.read()
-            raise ValueError('%s error' % msg)
-        else:
-            self.print_green ("%s success !" % msg)
-
-    def parse_bucket_name(self, username):
+    def parse_username(self, username):
         if username == "":
-            raise ValueError("username can't be empty!")
+            raise AuthorizerError("username can't be empty!")
         index = username.rfind('/')
         if index == -1:
-            raise ValueError("username is not in right format.")
-        return username[index+1:] 
+            raise AuthorizerError("username %s is not in right format, it should be like ACCESS_ID/BUCKET_NAME" % username)
+        elif index == len(username) - 1:
+            raise AuthorizerError("bucketname can't be empty!")
+        elif index == 0:
+            raise AuthorizerError("ACCESS_ID can't be empty!")
 
-    def parse_access_id(self, username):
-        if username == "":
-            raise ValueError("username can't be empty!")
-        index = username.rfind('/')
-        if index == -1:
-            raise ValueError("username is not in right format.")
-        return username[:index] 
+        return  username[index+1:], username[:index]
 
     def put_bucket_info(self, bucket_name, endpoint, access_id, access_key):
         info_expire_time = time.time() + self.expire_time
@@ -102,7 +48,7 @@ class OssAuthorizer(DummyAuthorizer):
                     "endpoint": endpoint,
                     "access_key_dict": access_key_dict,
                     "info_expire_time": info_expire_time
-                    }
+            }
         else:
             #may need to update info
             if access_id not in self.bucket_info_table[bucket_name]["access_key_dict"]:
@@ -116,7 +62,6 @@ class OssAuthorizer(DummyAuthorizer):
             return None
 
     def delete_bucket_info(self, bucket_name):
-        """Remove a user from the virtual users table."""
         if bucket_name in self.bucket_info_table:
             del self.bucket_info_table[bucket_name]
 
@@ -128,6 +73,7 @@ class OssAuthorizer(DummyAuthorizer):
             return internal_endpoint
         elif self.internal is False:
             return public_endpoint
+
         try:
             bucket = oss2.Bucket(oss2.Auth(access_id, access_key), internal_endpoint, bucket_name, connect_timeout=1.0, app_name=defaults.app_name)
             res = bucket.get_bucket_acl()
@@ -135,32 +81,30 @@ class OssAuthorizer(DummyAuthorizer):
             return public_endpoint
         return internal_endpoint
 
-    def _check_loggin(self, bucket_name, endpoint, access_id, access_key):
+    def _check_loggin(self, bucket_name, default_endpoint, access_id, access_key):
         try:
-            service = oss2.Service(oss2.Auth(access_id, access_key), endpoint, app_name=defaults.app_name)
+            service = oss2.Service(oss2.Auth(access_id, access_key), default_endpoint, app_name=defaults.app_name)
             res = service.list_buckets(prefix=bucket_name)
             bucket_list = res.buckets
             for bucket in bucket_list:
                 if bucket.name == bucket_name:
-                    self.location = bucket.location
-                    self.endpoint = self.get_endpoint(bucket_name, self.location, access_id, access_key)
-                    print "bucket: %s, location: %s, access_domain: %s" % (bucket_name, self.location, self.endpoint)
-                    self.put_bucket_info(bucket_name, endpoint, access_id, access_key)
+                    endpoint = self.get_endpoint(bucket_name, bucket.location, access_id, access_key)
                     return endpoint
-            raise ValueError("can't find the bucket %s when list buckets." % bucket_name) 
+            raise AuthenticationFailed("can't find the bucket %s when list buckets." % bucket_name) 
         except oss2.exceptions.OssError as e:
-            raise ValueError("get bucket:%s 's endpoint error: %s, status:%s, code:%s" % (bucket_name, e.status, e.code))
+            raise AuthenticationFailed("get bucket %s endpoint error, request_id: %s, status: %s, code: %s" % (bucket_name, e.request_id, e.status, e.code))
 
     def validate_authentication(self, username, password, handler):
         """Raises AuthenticationFailed if supplied username and
         password don't match the stored credentials, else return
         None.
         """
-        bucket_name = self.parse_bucket_name(username)
-        access_id = self.parse_access_id(username)
+        print username, password
+        bucket_name, access_id = self.parse_username(username)
         access_key = password
-        general_endpoint = "oss-cn-hangzhou.aliyuncs.com"
-        location = self._check_loggin(bucket_name, general_endpoint, access_id, access_key)
+        print "bucket_name %s, access_id:%s, access_key:%s" % (bucket_name, access_id, access_key)
+        endpoint = self._check_loggin(bucket_name, self.default_endpoint, access_id, access_key)
+        self.put_bucket_info(bucket_name, endpoint, access_id, access_key)
 
     def get_home_dir(self, username):
         """Return the user's home directory.
@@ -168,11 +112,9 @@ class OssAuthorizer(DummyAuthorizer):
         AuthenticationFailed can be freely raised by subclasses in case
         the provided username no longer exists.
         """
-        bucket_name = self.parse_bucket_name(username)
-        if not bucket_name.startswith('/'):
-            bucket_name = '/' + bucket_name
-        if not bucket_name.endswith('/'):
-            bucket_name = bucket_name + '/'
+        bucket_name, access_id = self.parse_username(username)
+        bucket_name = bucket_name.strip('/')
+        bucket_name = '/' + bucket_name + '/'
         return bucket_name 
 
     def impersonate_user(self, username, password):
@@ -208,14 +150,12 @@ class OssAuthorizer(DummyAuthorizer):
 
     def get_msg_login(self, username):
         """Return the user's login message."""
-        bucket_name = self.parse_bucket_name(username)
-        access_id = self.parse_access_id(username)
+        bucket_name, access_id = self.parse_username(username)
         msg = "login to bucket: %s with access_id: %s" % (bucket_name, access_id)
         return msg 
 
     def get_msg_quit(self, username):
         """Return the user's quitting message."""
-        bucket_name = self.parse_bucket_name(username)
-        access_id = self.parse_access_id(username)
+        bucket_name, access_id = self.parse_username(username)
         msg = "logout of bucket: %s with access_id: %s" % (bucket_name, access_id)
         return msg 

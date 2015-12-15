@@ -1,6 +1,7 @@
 import oss2
 from . import oss_file_operation
 from . import defaults
+from pyftpdlib.filesystems import FilesystemError
 
 class OssFsImpl:
    
@@ -137,13 +138,12 @@ class OssFsImpl:
         return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path)).remove()
     
     def rename(self, path1, path2):
-        pass
+        raise FilesystemError("method rename not implied")
     
     def getsize(self, path):
         return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path)).getsize()
-    ##not implement
     def getmodify(self, path):
-        return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path)).getmodify()
+        raise FilesystemError("method getmodify not implied")
     
     def isfile(self, path):
         return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path)).isfile()

@@ -35,7 +35,7 @@ def main(args, opts):
         masquerade_address = opts.masquerade_address
     if opts.port:
         try:
-            port = (int)(opts.port)
+            port = int(opts.port)
         except ValueError:
             print "invalid FTP port, please input a valid port like --port=990"
             return
