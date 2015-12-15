@@ -1,4 +1,4 @@
-module_title: OSS FTP
+module_title: OSS-FTP
 menu_sort_id: 1
 sub_menus: {
   1:{
@@ -10,10 +10,6 @@ sub_menus: {
     url: config
   },
   3:{
-    title: 日志,
-    url: logging
-  },
-  4:{
     title: 关于,
     url: about
   }

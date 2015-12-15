@@ -20,8 +20,8 @@ import datetime
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 
-import yaml
 import json
+from collections import OrderedDict
 
 import launcher_log
 import module_init
@@ -73,11 +73,12 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 continue
 
             #version = values["current_version"]
-            menu_path = os.path.join(root_path, module, "web_ui", "menu.yaml")
+            menu_path = os.path.join(root_path, module, "web_ui", "menu.json")
             if not os.path.isfile(menu_path):
                 continue
                 
-            module_menu = yaml.load(file(menu_path, 'r'))
+            module_menu = json.load(file(menu_path, 'r'), object_pairs_hook=OrderedDict)
+            print json.dumps(module_menu, sort_keys=True, indent=4, separators=(',', ':'))
             module_menus[module] = module_menu
 
         module_menus = sorted(module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
@@ -162,7 +163,6 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             else:
                 mimetype = 'text/plain'
 
-
             self.send_file(file_path, mimetype)
         elif url_path == '/config':
             self.req_config_handler()
@@ -176,8 +176,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             os._exit(0)
         elif url_path == '/restart':
             self.send_response('text/html', '{"status":"success"}')
-            # XXX TODO implement later
-            raise RuntimeError('Do not support restart!')
+            module_init.stop_all()
+            module_init.start_all_auto()
         else:
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
             launcher_log.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
@@ -246,14 +246,11 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         success = True
 
         if reqs['cmd'] == ['get_config']:
-            launcher_log("faint begin")
             config.load()
-            launcher_log("faint middle")
             data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d }' %\
                    (config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0))
-            launcher_log("faint end")        
         elif reqs['cmd'] == ['set_config']:
             popup_webui = 0
             auto_start = 0

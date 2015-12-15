@@ -45,7 +45,7 @@ class MacTrayObject(NSObject):
         # Let it highlight upon clicking
         self.statusitem.setHighlightMode_(1)
 
-        self.statusitem.setToolTip_("XX-Net")
+        self.statusitem.setToolTip_("OSS-FTP")
 
         # Build a very simple menu
         self.menu = NSMenu.alloc().init()
@@ -53,14 +53,8 @@ class MacTrayObject(NSObject):
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Config', 'config:', '')
         self.menu.addItem_(menuitem)
 
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Enable Global Goagent Proxy', 'enableProxy:', '')
-        self.menu.addItem_(menuitem)
-
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Disable Global Goagent Proxy', 'disableProxy:', '')
-        self.menu.addItem_(menuitem)
-
         # Rest Menu Item
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Reload GAEProxy', 'resetGoagent:', '')
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Restart OSS-FTP', 'restartOssFtp:', '')
         self.menu.addItem_(menuitem)
         # Default event
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit', 'windowWillClose:', '')
@@ -84,37 +78,9 @@ class MacTrayObject(NSObject):
 
     #Note: the function name for action can include '_'
     # limited by Mac cocoa
-    def resetGoagent_(self, _):
-        module_init.stop("gae_proxy")
-        module_init.start("gae_proxy")
-
-    def enableProxy_(self, _):
-        cmd1 = "networksetup -setwebproxy Ethernet 127.0.0.1 8087"
-        cmd2 = "networksetup -setwebproxy Wi-Fi 127.0.0.1 8087"
-        cmd3 = "networksetup -setwebproxystate Ethernet on"
-        cmd4 = "networksetup -setwebproxystate Wi-Fi on"
-        cmd5 = "networksetup -setsecurewebproxy Ethernet 127.0.0.1 8087"
-        cmd6 = "networksetup -setsecurewebproxy Wi-Fi 127.0.0.1 8087"
-        cmd7 = "networksetup -setsecurewebproxystate Ethernet on"
-        cmd8 = "networksetup -setsecurewebproxystate Wi-Fi on"
-        exec_command = "%s;%s;%s;%s;%s;%s;%s;%s" % (cmd1, cmd2, cmd3, cmd4, cmd5, cmd6, cmd7, cmd8)
-        admin_command = """osascript -e 'do shell script "%s" with administrator privileges' """ % exec_command
-        cmd = admin_command.encode('utf-8')
-        launcher_log.info("try enable proxy:%s", cmd)
-        os.system(cmd)
-
-    def disableProxy_(self, _):
-        cmd1 = "networksetup -setwebproxystate Ethernet off"
-        cmd2 = "networksetup -setwebproxystate Wi-Fi off"
-        cmd3 = "networksetup -setsecurewebproxystate Ethernet off"
-        cmd4 = "networksetup -setsecurewebproxystate Wi-Fi off"
-        exec_command = "%s;%s;%s;%s" % (cmd1, cmd2, cmd3, cmd4)
-        admin_command = """osascript -e 'do shell script "%s" with administrator privileges' """ % exec_command
-        cmd = admin_command.encode('utf-8')
-        launcher_log.info("try disable proxy:%s", cmd)
-        os.system(cmd)
-
-
+    def restartOssFtp_(self, _):
+        module_init.stop('ossftp')
+        module_init.start('ossftp')
 
 class Mac_tray():
     def dialog_yes_no(self, msg="msg", title="Title", data=None, callback=None):

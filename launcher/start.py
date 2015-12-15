@@ -52,7 +52,6 @@ else:
 import config
 import web_control
 import module_init
-import update
 import setup_win_python
 
 def exit_handler():
@@ -83,8 +82,6 @@ def main():
 
     if has_desktop and config.get(["modules", "launcher", "popup_webui"], 1) == 1:
         webbrowser.open("http://127.0.0.1:8085/")
-
-    update.start()
 
     if config.get(["modules", "launcher", "show_systray"], 1):
         sys_tray.serve_forever()
