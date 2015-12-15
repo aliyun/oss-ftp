@@ -4,6 +4,7 @@ import launcher_log
 
 
 import yaml
+import json
 from distutils.version import LooseVersion
 
 
@@ -54,30 +55,17 @@ def set(path, val):
     global config
     _set(config, path, val)
 
-
-
-
 def recheck_module_path():
     global config
     need_save_config = False
 
-    #modules = ["gae_proxy", "launcher", "php_proxy"]
-    modules = ["launcher"]
-    for module in modules:
-        if module not in ["launcher", "php_proxy"]:
-            if not os.path.isdir(os.path.join(root_path, module)):
-                del config[module]
-                continue
+    modules = ["ossftp", "launcher"]
 
-            if get(["modules", module, "auto_start"], -1) == -1:
-                set(["modules", module, "auto_start"], 1)
+    if get(["modules", "ossftp", "auto_start"], -1) == -1:
+        set(["modules", "ossftp", "auto_start"], 1)
 
     if get(["modules", "launcher", "control_port"], 0) == 0:
         set(["modules", "launcher", "control_port"], 8085)
-    #if get(["modules", "gae_proxy", "control_port"], 0) == 0:
-    #    set(["modules", "gae_proxy", "control_port"], 8084)
-    if get(["modules", "php_proxy", "control_port"], 0) == 0:
-        set(["modules", "php_proxy", "control_port"], 8083)
 
     return need_save_config
 
@@ -89,9 +77,9 @@ def create_data_path():
     if not os.path.isdir(data_launcher_path):
         os.mkdir(data_launcher_path)
 
-    data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
-    if not os.path.isdir(data_gae_proxy_path):
-        os.mkdir(data_gae_proxy_path)
+    data_ossftp_path = os.path.join(data_path, 'ossftp')
+    if not os.path.isdir(data_ossftp_path):
+        os.mkdir(data_ossftp_path)
 
 def main():
     create_data_path()

@@ -112,7 +112,7 @@ elif sys.platform == 'darwin':
     from os.path import expanduser
     home = expanduser("~")
 
-    plist_file_path = os.path.join(home, "Library/LaunchAgents/com.xxnet.launcher.plist")
+    plist_file_path = os.path.join(home, "Library/LaunchAgents/com.aliyun.ossftp.launcher.plist")
 
     def add(name, cmd):
         file_content = plist_template % cmd
@@ -130,10 +130,10 @@ else:
         pass
 
 def enable():
-    add("XX-Net", run_cmd)
+    add("ossftp", run_cmd)
 
 def disable():
-    remove("XX-Net")
+    remove("ossftp")
 
 def test():
     assert not exists("test_xxx")

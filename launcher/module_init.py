@@ -31,25 +31,12 @@ def start(module):
         if module not in proc_handler:
             proc_handler[module] = {}
 
-        if os.path.isfile(os.path.join(root_path, module, "__init__.py")):
-            if "imp" not in proc_handler[module]:
-                proc_handler[module]["imp"] = __import__(module, globals(), locals(), ['local', 'start'], -1)
+        script_path = os.path.join(root_path, 'ftpserver.py')
+        if not os.path.isfile(script_path):
+            launcher_log.warn("start module script not exist:%s", script_path)
+            return "fail"
 
-            _start = proc_handler[module]["imp"].start
-            p = threading.Thread(target = _start.main)
-            p.daemon = True
-            p.start()
-            proc_handler[module]["proc"] = p
-
-            while not _start.client.ready:
-                time.sleep(0.1)
-        else:
-            script_path = os.path.join(root_path, module, 'start.py')
-            if not os.path.isfile(script_path):
-                launcher_log.warn("start module script not exist:%s", script_path)
-                return "fail"
-
-            proc_handler[module]["proc"] = subprocess.Popen([sys.executable, script_path], shell=False)
+        proc_handler[module]["proc"] = subprocess.Popen([sys.executable, script_path], shell=False)
 
 
         launcher_log.info("%s started", module)
@@ -64,17 +51,8 @@ def stop(module):
         if not module in proc_handler:
             launcher_log.error("module %s not running", module)
             return
-
-        if os.path.isfile(os.path.join(root_path, module, "__init__.py")):
-
-            _start = proc_handler[module]["imp"].start
-            _start.client.terminate()
-            launcher_log.debug("module %s stopping", module)
-            while _start.client.ready:
-                time.sleep(0.1)
-        else:
-            proc_handler[module]["proc"].terminate()  # Sends SIGTERM
-            proc_handler[module]["proc"].wait()
+        proc_handler[module]["proc"].terminate()  # Sends SIGTERM
+        proc_handler[module]["proc"].wait()
 
         del proc_handler[module]
 
@@ -88,14 +66,12 @@ def start_all_auto():
     for module in config.config["modules"]:
         if module == "launcher":
             continue
-        if not os.path.isdir(os.path.join(root_path, module)):
-            continue
-        if "auto_start" in config.config['modules'][module] and config.config['modules'][module]["auto_start"]:
-            start_time = time.time()
-            start(module)
-            #web_control.confirm_module_ready(config.get(["modules", module, "control_port"], 0))
-            finished_time = time.time()
-            launcher_log.info("start %s time cost %d", module, (finished_time - start_time) * 1000)
+        
+        start_time = time.time()
+        start(module)
+        #web_control.confirm_module_ready(config.get(["modules", module, "control_port"], 0))
+        finished_time = time.time()
+        launcher_log.info("start %s time cost %d", module, (finished_time - start_time) * 1000)
 
 def stop_all():
     running_modules = [k for k in proc_handler]

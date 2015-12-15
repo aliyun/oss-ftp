@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# coding:utf-8
+#!/usr/bin/env python coding:utf-8
 
 import os, sys
 
@@ -28,7 +27,6 @@ import launcher_log
 import module_init
 import config
 import autorun
-import update_from_github
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
@@ -178,7 +176,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             os._exit(0)
         elif url_path == '/restart':
             self.send_response('text/html', '{"status":"success"}')
-            update_from_github.restart_xxnet()
+            # XXX TODO implement later
+            raise RuntimeError('Do not support restart!')
         else:
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
             launcher_log.info('%s "%s %s HTTP/1.1" 404 -', self.address_string(), self.command, self.path)
@@ -244,107 +243,50 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         req = urlparse.urlparse(self.path).query
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
         data = ''
-
-        current_version = update_from_github.current_version()
+        success = True
 
         if reqs['cmd'] == ['get_config']:
+            launcher_log("faint begin")
             config.load()
-            check_update = config.get(["update", "check_update"], 1)
-            if check_update == 0:
-                check_update = "dont-check"
-            elif check_update == 1:
-                check_update = "long-term-stable"
-
-            data = '{ "check_update": "%s", "popup_webui": %d, "show_systray": %d, "auto_start": %d, "php_enable": %d, "gae_proxy_enable": %d }' %\
-                   (check_update
-                    , config.get(["modules", "launcher", "popup_webui"], 1)
+            launcher_log("faint middle")
+            data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d }' %\
+                   (config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "show_systray"], 1)
-                    , config.get(["modules", "launcher", "auto_start"], 0)
-                    , config.get(["modules", "php_proxy", "auto_start"], 0)
-                    , config.get(["modules", "gae_proxy", "auto_start"], 0))
+                    , config.get(["modules", "launcher", "auto_start"], 0))
+            launcher_log("faint end")        
         elif reqs['cmd'] == ['set_config']:
-            if 'check_update' in reqs:
-                check_update = reqs['check_update'][0]
-                if check_update not in ["dont-check", "long-term-stable", "stable", "test"]:
-                    data = '{"res":"fail, check_update:%s"}' % check_update
-                else:
-                    config.set(["update", "check_update"], check_update)
-                    config.save()
+            popup_webui = 0
+            auto_start = 0
+            show_systray = 1
+            ossftp_port = 21
+            data = '{"res":"fail"}'
 
-                    data = '{"res":"success"}'
-
-            elif 'popup_webui' in reqs :
+            if success and 'popup_webui' in reqs :
                 popup_webui = int(reqs['popup_webui'][0])
                 if popup_webui != 0 and popup_webui != 1:
+                    success = False
                     data = '{"res":"fail, popup_webui:%s"}' % popup_webui
-                else:
-                    config.set(["modules", "launcher", "popup_webui"], popup_webui)
-                    config.save()
-
-                    data = '{"res":"success"}'
-            elif 'show_systray' in reqs :
+            if success and 'show_systray' in reqs :
                 show_systray = int(reqs['show_systray'][0])
                 if show_systray != 0 and show_systray != 1:
-                    data = '{"res":"fail, show_systray:%s"}' % show_systray
-                else:
-                    config.set(["modules", "launcher", "show_systray"], show_systray)
-                    config.save()
-
-                    data = '{"res":"success"}'
-            elif 'auto_start' in reqs :
+                    success = False
+                    data = '{"res":"fail, show_systray:%s"}' % show_systray        
+            if success and 'auto_start' in reqs :
                 auto_start = int(reqs['auto_start'][0])
                 if auto_start != 0 and auto_start != 1:
+                    success = False
                     data = '{"res":"fail, auto_start:%s"}' % auto_start
+                
+            if success:
+                config.set(["modules", "launcher", "popup_webui"], popup_webui)
+                config.set(["modules", "launcher", "show_systray"], show_systray)
+                config.set(["modules", "launcher", "auto_start"], auto_start)
+                config.save()
+                if auto_start:
+                    autorun.enable()
                 else:
-                    if auto_start:
-                        autorun.enable()
-                    else:
-                        autorun.disable()
-
-                    config.set(["modules", "launcher", "auto_start"], auto_start)
-                    config.save()
-
-                    data = '{"res":"success"}'
-            elif 'gae_proxy_enable' in reqs :
-                gae_proxy_enable = int(reqs['gae_proxy_enable'][0])
-                if gae_proxy_enable != 0 and gae_proxy_enable != 1:
-                    data = '{"res":"fail, gae_proxy_enable:%s"}' % gae_proxy_enable
-                else:
-                    config.set(["modules", "gae_proxy", "auto_start"], gae_proxy_enable)
-                    config.save()
-                    if gae_proxy_enable:
-                        module_init.start("gae_proxy")
-                    else:
-                        module_init.stop("gae_proxy")
-                    self.load_module_menus()
-                    data = '{"res":"success"}'
-            elif 'php_enable' in reqs :
-                php_enable = int(reqs['php_enable'][0])
-                if php_enable != 0 and php_enable != 1:
-                    data = '{"res":"fail, php_enable:%s"}' % php_enable
-                else:
-                    config.set(["modules", "php_proxy", "auto_start"], php_enable)
-                    config.save()
-                    if php_enable:
-                        module_init.start("php_proxy")
-                    else:
-                        module_init.stop("php_proxy")
-                    self.load_module_menus()
-                    data = '{"res":"success"}'
-            else:
-                data = '{"res":"fail"}'
-        elif reqs['cmd'] == ['get_new_version']:
-            versions = update_from_github.get_github_versions()
-            data = '{"res":"success", "test_version":"%s", "stable_version":"%s", "current_version":"%s"}' % (versions[0][1], versions[1][1], current_version)
-            launcher_log.info("%s", data)
-        elif reqs['cmd'] == ['update_version']:
-            version = reqs['version'][0]
-            try:
-                update_from_github.update_version(version)
+                    autorun.disable()
                 data = '{"res":"success"}'
-            except Exception as e:
-                launcher_log.info("update_test_version fail:%r", e)
-                data = '{"res":"fail", "error":"%s"}' % e
 
         self.send_response('text/html', data)
 
@@ -414,8 +356,8 @@ def http_request(url, method="GET"):
         #logging.exception("web_control http_request:%s fail:%s", url, e)
         return False
 
-def confirm_xxnet_exit():
-    launcher_log.debug("start confirm_xxnet_exit")
+def confirm_ossftp_exit():
+    launcher_log.debug("start confirm_ossftp_exit")
     for i in range(30):
         if http_request("http://127.0.0.1:8087/quit") == False:
             return True
@@ -424,7 +366,7 @@ def confirm_xxnet_exit():
         if http_request("http://127.0.0.1:8085/quit") == False:
             return True
         time.sleep(1)
-    launcher_log.debug("finished confirm_xxnet_exit")
+    launcher_log.debug("finished confirm_ossftp_exit")
     return False
 
 def confirm_module_ready(port):
@@ -449,5 +391,5 @@ def confirm_module_ready(port):
     return False
 
 if __name__ == "__main__":
-    #confirm_xxnet_exit()
+    #confirm_ossftp_exit()
     http_request("http://getbootstrap.com/dist/js/bootstrap.min.js")

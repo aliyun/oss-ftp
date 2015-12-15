@@ -74,9 +74,7 @@ def main():
         __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    web_control.confirm_xxnet_exit()
-
-    setup_win_python.check_setup()
+    web_control.confirm_ossftp_exit()
 
     module_init.start_all_auto()
 
