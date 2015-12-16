@@ -1,13 +1,9 @@
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-import time
 from optparse import OptionParser
-import ConfigParser
-
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
-from pyftpdlib.filesystems import AbstractedFS
 
 import ossftp
 
@@ -42,7 +38,6 @@ def start_ftp(masquerade_address, port, internal):
     handler.abstracted_fs = ossftp.OssFS
     handler.banner = 'oss ftpd ready.'
     address = ('0.0.0.0', port)
-    #logging.basicConfig(filename='ossftp.log', level=logging.DEBUG)
     set_root_logger()
     server = FTPServer(address, handler)
     server.serve_forever()

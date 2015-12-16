@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from pyftpdlib._compat import PY3, u, unicode
+
 from pyftpdlib.filesystems import FilesystemError
 import time
 import datetime
-import pdb
-import os
 import types
 
 import oss2
@@ -17,7 +15,7 @@ class OssFileOperation:
     expire_time = 10
     
     def __init__(self, bucket, object):
-        self.bucket = bucket 
+        self.bucket = bucket
         self.object = self.stripFirstDelimiter(object)
         self.buf = ''
         self.buflimit = defaults.send_data_buff_size
@@ -47,7 +45,7 @@ class OssFileOperation:
             except OssError as e:
                 status, code, request_id = e.status, e.code, e.request_id
         raise FilesystemError("init_multi_upload failed. bucket:%s, object:%s, \
-                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name,
                     self.object, request_id, code, status))
 
     def send_buf(self):
@@ -67,7 +65,7 @@ class OssFileOperation:
             except OssError as e:
                 status, code, request_id = e.status, e.code, e.request_id
         raise FilesystemError("upload part failed. bucket:%s, object:%s, partNum:%s\
-                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name,
                     self.object, self.partNum, request_id, code, status))
         
     def write(self, data):
@@ -92,7 +90,7 @@ class OssFileOperation:
                     status, code, request_id = e.status, e.code, e.request_id
             
             raise FilesystemError("put object failed. bucket:%s, object:%s, \
-                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name,
                     self.object, request_id, code, status))
         
         self.send_buf()
@@ -100,6 +98,7 @@ class OssFileOperation:
         retry = self.max_retry_times
         status, code, request_id = "", "", ""
         list_ok = False
+        parts = []
         while retry > 0:
             retry -= 1
             try:
@@ -111,7 +110,7 @@ class OssFileOperation:
                 status, code, request_id = e.status, e.code, e.request_id
         if not list_ok:
             raise FilesystemError("list parts failed. bucket:%s, object:%s, \
-                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name,
                     self.object, request_id, code, status))
 
         retry = self.max_retry_times
@@ -194,8 +193,8 @@ class OssFileOperation:
             self.cache_set(self.size_cache, (self.bucket.bucket_name, self.object), content_len)
         except OssError as e:
             raise FilesystemError("head object failed. bucket:%s, object:%s, \
-                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
-                    self.object, self.request_id, self.code, self.status))
+                    request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name,
+                    self.object, e.request_id, e.code, e.status))
         return content_len
     
     def open_read(self):
@@ -214,7 +213,7 @@ class OssFileOperation:
             except OssError as e:
                 status, code, request_id = e.status, e.code, e.request_id
         raise FilesystemError("get object failed. bucket:%s, object:%s, \
-                request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name,
                 self.object, request_id, code, status))
          
     def mkdir(self):
@@ -232,7 +231,7 @@ class OssFileOperation:
             except OssError as e:
                 status, code, request_id = e.status, e.code, e.request_id
         raise FilesystemError("put object/dir failed. bucket:%s, object:%s, \
-                request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name,
                 object, request_id, code, status))
             
     def rmdir(self):
@@ -250,12 +249,13 @@ class OssFileOperation:
             except OssError as e:
                 status, code, request_id = e.status, e.code, e.request_id
         raise FilesystemError("delete object/dir failed. bucket:%s, object:%s, \
-                request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name,
                 object, request_id, code, status))
 
     def remove(self):
         object = self.object
         retry = self.max_retry_times
+        status, code, request_id = -1, '', ''
         while retry > 0:
             retry -= 1
             try:
@@ -264,5 +264,5 @@ class OssFileOperation:
             except OssError as e:
                 status, code, request_id = e.status, e.code, e.request_id
         raise FilesystemError("delete object failed. bucket:%s, object:%s, \
-                request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name, \
+                request_id:%s, code:%s, status:%s" % (self.bucket.bucket_name,
                 object, request_id, code, status))

@@ -2,14 +2,7 @@
 from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.authorizers import AuthenticationFailed
 from pyftpdlib.authorizers import AuthorizerError
-from pyftpdlib._compat import PY3, unicode, getcwdu
-
-import os
-import warnings
-import errno
-import sys
 import time
-import socket
 
 import oss2
 from . import defaults

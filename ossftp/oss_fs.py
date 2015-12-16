@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
 import time
-import tempfile
-import stat
-import pdb
 
 from pyftpdlib.filesystems import FilesystemError
 from pyftpdlib._compat import PY3, u, unicode
@@ -111,7 +107,6 @@ class OssFS(AbstractedFS):
             timefunc = time.gmtime
         else:
             timefunc = time.localtime
-        SIX_MONTHS = 180 * 24 * 60 * 60
         now = time.time()
         for (basename, size, modify) in listing:
             if basename == '':
@@ -131,12 +126,10 @@ class OssFS(AbstractedFS):
                 mtimestr = "%s %s" % (_months_map[int(modify[5:7])],
                                       "%s %s:%s" % (modify[2:4], modify[11:13], modify[14:16]))
             else:
-                #mtimestr = "Aug 13 03:35"
                 mtimestr = "%s %s" % (_months_map[mtime.tm_mon],
                                       time.strftime("%d %H:%M", mtime))
                 size = 0
             
-            islink = False
             line = "%s %3s %-8s %-8s %8s %s %s\r\n" % (perms, nlinks, uname, gname,
                                                        size, mtimestr, basename)
             yield line.encode('utf8', self.cmd_channel.unicode_errors)

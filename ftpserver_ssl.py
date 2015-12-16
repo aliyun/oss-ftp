@@ -1,12 +1,8 @@
 import logging
-import os
-import time
 from optparse import OptionParser
-import ConfigParser
 
 from pyftpdlib.handlers import TLS_FTPHandler
 from pyftpdlib.servers import FTPServer
-from pyftpdlib.filesystems import AbstractedFS
 
 import ossftp
 
