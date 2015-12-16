@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import traceback
+import xlog
 
 
 CRITICAL = 50
@@ -48,9 +49,6 @@ def create_data_path():
     if not os.path.isdir(data_launcher_path):
         os.mkdir(data_launcher_path)
 
-    data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
-    if not os.path.isdir(data_gae_proxy_path):
-        os.mkdir(data_gae_proxy_path)
 create_data_path()
 
 log_path = os.path.join(data_path, "launcher", "log.log")
@@ -80,6 +78,7 @@ def dummy(*args, **kwargs):
 def debug(fmt, *args, **kwargs):
     __set_debug_color()
     log('DEBUG', fmt, *args, **kwargs)
+    xlog.debug(fmt, *args, **kwargs)
     __reset_color()
 
 def info(fmt, *args, **kwargs):

@@ -22,7 +22,7 @@ root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 
 import json
 from collections import OrderedDict
-
+import xlog
 import launcher_log
 import module_init
 import config
@@ -165,6 +165,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_file(file_path, mimetype)
         elif url_path == '/config':
             self.req_config_handler()
+        elif url_path == '/log':
+            self.req_log_handler()
         elif url_path == '/download':
             self.req_download_handler()
         elif url_path == '/init_module':
@@ -199,12 +201,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             target_module = reqs['module'][0]
             target_menu = reqs['menu'][0]
         except:
-            if config.get(['modules', 'gae_proxy', 'auto_start'], 0) == 1:
-                target_module = 'gae_proxy'
-                target_menu = 'status'
-            else:
-                target_module = 'launcher'
-                target_menu = 'about'
+            target_module = 'launcher'
+            target_menu = 'config'
 
 
         if len(module_menus) == 0:
@@ -245,17 +243,19 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if reqs['cmd'] == ['get_config']:
             config.load()
-            data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d, "ossftp_port": %d }' %\
+            data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d, "ossftp_port": %d, "ossftp_loglevel": "%s" }' %\
                    (config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
-                    , config.get(["modules", "ossftp", "port"], 21))
+                    , config.get(["modules", "ossftp", "port"], 21)
+                    , config.get(["modules", "ossftp", "log_level"], 'info'))
         elif reqs['cmd'] == ['set_config']:
             success = True
-            popup_webui = 0
-            auto_start = 0
-            show_systray = 1
-            ossftp_port = 21
+            popup_webui = config.get(["modules", "launcher", "popup_webui"], 1)
+            auto_start = config.get(["modules", "launcher", "auto_start"], 0)
+            show_systray = config.get(["modules", "launcher", "show_systray"], 1)
+            ossftp_port = config.get(["modules", "ossftp", "port"], 21)
+            ossftp_loglevel = config.get(["modules", "ossftp", "log_level"], 'info')
             data = '{"res":"fail"}'
             if success and 'popup_webui' in reqs :
                 popup_webui = int(reqs['popup_webui'][0])
@@ -272,23 +272,64 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if auto_start != 0 and auto_start != 1:
                     success = False
                     data = '{"res":"fail, auto_start:%s"}' % auto_start
-            if success and 'ossftp_port' in reqs :
+            if success and 'ossftp_port' in reqs:
                 ossftp_port = int(reqs['ossftp_port'][0])
+                if ossftp_port < 0:
+                    success = False
+                    data = '{"res":"fail, ilegal ossftp port: %d"}' % ossftp_port
+            if success and 'ossftp_loglevel' in reqs:
+                ossftp_loglevel = reqs['ossftp_loglevel'][0].strip().lower()
+                if (ossftp_loglevel not in ['debug', 'info', 'warning', 'error', 'critical']):
+                    success = False
+                    data = '{"res":"fail, illegal ossftp log level: %s. Must be: debug, info, warning, error, critical"}' % ossftp_loglevel
                 
             if success:
                 config.set(["modules", "launcher", "popup_webui"], popup_webui)
                 config.set(["modules", "launcher", "show_systray"], show_systray)
                 config.set(["modules", "launcher", "auto_start"], auto_start)
                 config.set(["modules", "ossftp", "port"], ossftp_port)
+                config.set(["modules", "ossftp", "log_level"], ossftp_loglevel)
                 config.save()
                 if auto_start:
                     autorun.enable()
                 else:
                     autorun.disable()
                 data = '{"res":"success"}'
+                launcher_log.info('Set config: %s', json.dumps(config.config, sort_keys=True, separators=(',',':'), indent=2))
+            else:
+                launcher_log.error(data)
 
         self.send_response('text/html', data)
 
+    def req_log_handler(self):
+        req = urlparse.urlparse(self.path).query
+        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        data = ''
+
+        cmd = "get_last"
+        if reqs["cmd"]:
+            cmd = reqs["cmd"][0]
+        if cmd == "set_buffer_size" :
+            if not reqs["buffer_size"]:
+                data = '{"res":"fail", "reason":"size not set"}'
+                mimetype = 'text/plain'
+                self.send_response(mimetype, data)
+                return
+
+            buffer_size = reqs["buffer_size"][0]
+            xlog.set_buffer_size(buffer_size)
+        elif cmd == "get_last":
+            max_line = int(reqs["max_line"][0])
+            data = xlog.get_last_lines(max_line)
+        elif cmd == "get_new":
+            last_no = int(reqs["last_no"][0])
+            data = xlog.get_new_lines(last_no)
+        else:
+            xlog.error('PAC %s %s %s ', self.address_string(), self.command, self.path)
+
+        mimetype = 'text/plain'
+        self.send_response(mimetype, data)
+        
     def req_download_handler(self):
         req = urlparse.urlparse(self.path).query
         reqs = urlparse.parse_qs(req, keep_blank_values=True)

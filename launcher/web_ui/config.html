@@ -13,6 +13,12 @@
 			</div> <!-- .span8 -->
 		</div> <!-- .row-fluid -->
 		<div class="row-fluid">
+			<div class="span4">显示托盘图标（需要重启ossftp）</div> <!-- .span4 -->
+			<div class="span8">
+				<input id="show-systray" type="checkbox" data-toggle="switch" />
+			</div> <!-- .span8 -->
+		</div> <!-- .row-fluid -->
+        <div class="row-fluid">
 			<div class="span4">
 				<label for="ossftp-port">ossftp 监听端口（需要重启ossftp）</label>
 			</div> <!-- .span4 -->
@@ -20,10 +26,12 @@
 				<input id="ossftp-port" type="text" placeholder="默认监听21端口"/>
 			</div> <!-- .span8 -->
 		</div> <!-- .row-fluid -->
-		<div class="row-fluid">
-			<div class="span4">显示托盘图标（需要重启ossftp）</div> <!-- .span4 -->
+        <div class="row-fluid">
+			<div class="span4">
+				<label for="ossftp-loglevel">ossftp 日志等级（debug/info/warning/error/critical，需要重启ossftp）</label>
+			</div> <!-- .span4 -->
 			<div class="span8">
-				<input id="show-systray" type="checkbox" data-toggle="switch" />
+				<input id="ossftp-loglevel" type="text" placeholder="默认等级为info"/>
 			</div> <!-- .span8 -->
 		</div> <!-- .row-fluid -->
 	</div> <!-- #options -->
@@ -91,6 +99,9 @@
                 if ( result['ossftp_port'] != 0) {
                     $( '#ossftp-port').val(result['ossftp_port'])
                 }
+                if ( result['ossftp_loglevel'] != '') {
+                    $( '#ossftp-loglevel').val(result['ossftp_loglevel'])
+                }
             },
             error: function() {
                 displayErrorMessage();
@@ -133,14 +144,15 @@
 </script>
 <script type="text/javascript">
     function onSubmit() {
-	    var config = {
-		    'cmd':'set_config',
-		    'auto_start':$('#auto-start').is(':checked') ? 1:0,
-			'popup_webui':$('#popup-webui').is(':checked') ? 1:0,
-			'ossftp_port':$('#ossftp-port').val(),
-		    'show_systray':$('#show-systray').is(':checked') ? 1:0
-		};
-		$.ajax({
+        var config = {
+            'cmd':'set_config',
+            'auto_start':$('#auto-start').is(':checked') ? 1:0,
+            'popup_webui':$('#popup-webui').is(':checked') ? 1:0,
+            'show_systray':$('#show-systray').is(':checked') ? 1:0,
+            'ossftp_port':$('#ossftp-port').val(),
+            'ossftp_loglevel':$('#ossftp-loglevel').val()
+        };
+        $.ajax({
             type: 'GET',
             url: '/config',
             data: config,
@@ -149,7 +161,8 @@
                 if ( result['res'] == 'success' ) {
                     tip('设置已成功保存.', 'success');
                 } else {
-                    displayErrorMessage();
+                    var msg = '参数设置失败：%s.'
+                    tip(msg.format(result['res']), 'error');
                 }
             },
             error: function() {
