@@ -140,7 +140,7 @@ class OssFileOperation:
         for entry in self.key_list:
             to_add = entry.key.decode('utf-8')[len(key):]
             last_modified = entry.last_modified
-            last_modified_str = datetime.datetime.fromtimestamp(last_modified).strftime('%Y/%m/%d %H:%M:%S')
+            last_modified_str = datetime.datetime.utcfromtimestamp(last_modified).strftime('%Y/%m/%d %H:%M:%S')
             self.contents.append((to_add, entry.size, last_modified_str.decode('utf-8')))
             self.cache_set(self.size_cache, (self.bucket.bucket_name, entry.key), entry.size)
         for entry in self.dir_list:

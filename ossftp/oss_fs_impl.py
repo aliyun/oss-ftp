@@ -18,7 +18,7 @@ class OssFsImpl:
         self.dir_cache = {}
 
     def isBucket(self, path):
-        phyPath = self.stripLastDelimiter(path)
+        phyPath = path.rstrip('/')
         index = phyPath.rfind('/')
         if index == 0 and not self.isRoot(path):
             return True
@@ -27,15 +27,10 @@ class OssFsImpl:
     def isRoot(self, path):
         return path == '/'
 
-    def stripLastDelimiter(self, path):
-        if path.endswith('/'):
-            path = path[:-1]
-        return path
-
     def getOSSBucketName(self, path):
         if self.isRoot(path):
             return u'/'
-        phyPath = self.stripLastDelimiter(path)
+        phyPath = path.rstrip('/')
         index = phyPath.find('/', 1)
         if index <= 0:
             return phyPath[1:]
@@ -54,7 +49,7 @@ class OssFsImpl:
         if path == '/':
             return u'/'
 
-        parentPath = self.stripLastDelimiter(path)
+        parentPath = path.rstrip('/')
 
         index = parentPath.rfind('/')
         if index != -1:
@@ -86,7 +81,7 @@ class OssFsImpl:
         else:
             resArg = normalizedRootDir
 
-        resArg = self.stripLastDelimiter(resArg)
+        resArg = resArg.rstrip('/')
 
         st = normalizedFileName.split('/')
         for tok in st:
