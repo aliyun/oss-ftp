@@ -77,8 +77,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             if not os.path.isfile(menu_path):
                 continue
                 
-            module_menu = json.load(file(menu_path, 'r'), object_pairs_hook=OrderedDict)
-            print json.dumps(module_menu, sort_keys=True, indent=4, separators=(',', ':'))
+            module_menu = json.load(file(menu_path, 'r'), object_pairs_hook=OrderedDict)          
             module_menus[module] = module_menu
 
         module_menus = sorted(module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
@@ -242,22 +241,22 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
     def req_config_handler(self):
         req = urlparse.urlparse(self.path).query
         reqs = urlparse.parse_qs(req, keep_blank_values=True)
-        data = ''
-        success = True
+        data = ''        
 
         if reqs['cmd'] == ['get_config']:
             config.load()
-            data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d }' %\
+            data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d, "ossftp_port": %d }' %\
                    (config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "show_systray"], 1)
-                    , config.get(["modules", "launcher", "auto_start"], 0))
+                    , config.get(["modules", "launcher", "auto_start"], 0)
+                    , config.get(["modules", "ossftp", "port"], 21))
         elif reqs['cmd'] == ['set_config']:
+            success = True
             popup_webui = 0
             auto_start = 0
             show_systray = 1
             ossftp_port = 21
             data = '{"res":"fail"}'
-
             if success and 'popup_webui' in reqs :
                 popup_webui = int(reqs['popup_webui'][0])
                 if popup_webui != 0 and popup_webui != 1:
@@ -273,11 +272,14 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if auto_start != 0 and auto_start != 1:
                     success = False
                     data = '{"res":"fail, auto_start:%s"}' % auto_start
+            if success and 'ossftp_port' in reqs :
+                ossftp_port = int(reqs['ossftp_port'][0])
                 
             if success:
                 config.set(["modules", "launcher", "popup_webui"], popup_webui)
                 config.set(["modules", "launcher", "show_systray"], show_systray)
                 config.set(["modules", "launcher", "auto_start"], auto_start)
+                config.set(["modules", "ossftp", "port"], ossftp_port)
                 config.save()
                 if auto_start:
                     autorun.enable()

@@ -16,7 +16,7 @@
 			<div class="span4">
 				<label for="ossftp-port">ossftp 监听端口（需要重启ossftp）</label>
 			</div> <!-- .span4 -->
-			<div id="ossftp-port" class="span8">
+			<div class="span8">
 				<input id="ossftp-port" type="text" placeholder="默认监听21端口"/>
 			</div> <!-- .span8 -->
 		</div> <!-- .row-fluid -->
@@ -87,7 +87,10 @@
                     $( "#show-systray").parent().addClass('switch-on');
 
                     $( "#show-systray").prop('checked', true);
-                }           
+                }
+                if ( result['ossftp_port'] != 0) {
+                    $( '#ossftp-port').val(result['ossftp_port'])
+                }
             },
             error: function() {
                 displayErrorMessage();
@@ -112,35 +115,6 @@
     });
 </script>
 <script type="text/javascript">
-    $('#auto-start').change(function() {
-        var isChecked = $(this).is(':checked'),
-            key       = 'auto_start',
-            value     = isChecked ? 1 : 0;
-
-        return setConfig(key, value);
-    });
-
-    $('#show-systray').change(function() {
-        var isChecked = $(this).is(':checked'),
-            key       = 'show_systray',
-            value     = isChecked ? 1 : 0;
-
-        return setConfig(key, value);
-    });
-
-    $('#popup-webui').change(function() {
-        var isChecked = $(this).is(':checked'),
-            key       = 'popup_webui',
-            value     = isChecked ? 1 : 0;
-
-        return setConfig(key, value);
-    });
-</script>
-<script type="text/javascript">
-    function setConfig(key, value) {
-    }
-</script>
-<script type="text/javascript">
     function displayErrorMessage() {
         tip('发生未知错误, 请刷新页面重试.', 'error');
     }
@@ -161,10 +135,10 @@
     function onSubmit() {
 	    var config = {
 		    'cmd':'set_config',
-		    'auto-start':$('#auto-start').is(':checked') ? 1:0,
-			'popup-webui':$('#popup-webui').is(':checked') ? 1:0,
-			//'ossftp-port':$('#ossftp-port').val(),
-		    'show-systray':$('#show-systray').is(':checked') ? 1:0
+		    'auto_start':$('#auto-start').is(':checked') ? 1:0,
+			'popup_webui':$('#popup-webui').is(':checked') ? 1:0,
+			'ossftp_port':$('#ossftp-port').val(),
+		    'show_systray':$('#show-systray').is(':checked') ? 1:0
 		};
 		$.ajax({
             type: 'GET',
@@ -193,7 +167,7 @@
             data: empty,
             dataType: 'JSON',
             success: function(result) {
-                if ( result['res'] == 'success' ) {
+                if ( result['status'] == 'success' ) {
                     restartingService();
                 } else {
                     displayErrorMessage();
@@ -214,7 +188,7 @@
             data: empty,
             dataType: 'JSON',
             success: function(result) {
-                if ( result['res'] == 'success' ) {
+                if ( result['status'] == 'success' ) {
                     tip('OSS-FTP 服务已停止', 'success');
                 } else {
                     displayErrorMessage();

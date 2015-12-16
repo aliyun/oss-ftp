@@ -3,22 +3,22 @@ import os
 import launcher_log
 
 
-import yaml
 import json
+from collections import OrderedDict
 from distutils.version import LooseVersion
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 data_path = os.path.join(root_path, 'data')
-config_path = os.path.join(data_path, 'launcher', 'config.yaml')
+config_path = os.path.join(data_path, 'launcher', 'config.json')
 
 config = {}
 def load():
     global config, config_path
     try:
-        config = yaml.load(file(config_path, 'r'))
-        #print yaml.dump(config)
+        config = json.load(file(config_path, 'r'), object_pairs_hook=OrderedDict)
+        #print json.dumps(config, sort_keys=True, separators=(',',':'), indent=4)
     except Exception as  exc:
         print "Error in configuration file:", exc
 
@@ -26,7 +26,7 @@ def load():
 def save():
     global config, config_path
     try:
-        yaml.dump(config, file(config_path, "w"))
+        json.dump(config, file(config_path, "w"), sort_keys=True, separators=(',',':'), indent=2)
     except Exception as e:
         launcher_log.warn("save config %s fail %s", config_path, e)
 
@@ -61,10 +61,12 @@ def recheck_module_path():
 
     modules = ["ossftp", "launcher"]
 
-    if get(["modules", "ossftp", "auto_start"], -1) == -1:
-        set(["modules", "ossftp", "auto_start"], 1)
+    if get(["modules", "ossftp", "port"], -1) == -1:
+        need_save_config = True
+        set(["modules", "ossftp", "port"], 21)
 
     if get(["modules", "launcher", "control_port"], 0) == 0:
+        need_save_config = True
         set(["modules", "launcher", "control_port"], 8085)
 
     return need_save_config

@@ -52,7 +52,6 @@ else:
 import config
 import web_control
 import module_init
-import setup_win_python
 
 def exit_handler():
     print 'Stopping all modules before exit!'

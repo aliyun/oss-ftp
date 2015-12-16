@@ -65,10 +65,15 @@
     </div> <!-- #content -->
     <!-- JavaScript -->
     <!-- Placed at the end of the document so the pages load faster -->
+    
     <script type="text/javascript">
         $(function() {
             window.isFullWidth = false;
+            $('#tip-close').click(function() {
+                tipClose();
+            });
         });
+        
     </script>
     <script type="text/javascript">
         $('#resize-window-trigger').click(function() {

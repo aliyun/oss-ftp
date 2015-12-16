@@ -24,7 +24,7 @@ gtk.gdk.threads_init()
 
 try:
     import pynotify
-    pynotify.init('XX-Net Notify')
+    pynotify.init('OSS-FTP Notify')
 except:
     launcher_log.warn("import pynotify fail, please install python-notify if possiable.")
     pynotify = None
@@ -41,13 +41,13 @@ class Gtk_tray():
 
         self.trayicon.connect('popup-menu', lambda i, b, t: self.make_menu().popup(None, None, gtk.status_icon_position_menu, b, t, self.trayicon))
         self.trayicon.connect('activate', self.show_control_web)
-        self.trayicon.set_tooltip('XX-Net')
+        self.trayicon.set_tooltip('OSS-FTP')
         self.trayicon.set_visible(True)
 
     def make_menu(self):
         menu = gtk.Menu()
         itemlist = [(u'Config', self.on_show),
-                    ('restart gae_proxy', self.on_restart_gae_proxy),
+                    ('Restart OSS-FTP', self.on_restart_ossftp),
                     (u'Quit', self.on_quit)]
         for text, callback in itemlist:
             item = gtk.MenuItem(text)
@@ -79,9 +79,9 @@ class Gtk_tray():
     def show_control_web(self, widget=None, data=None):
         webbrowser.open_new("http://127.0.0.1:8085/")
 
-    def on_restart_gae_proxy(self, widget=None, data=None):
-        module_init.stop("gae_proxy")
-        module_init.start("gae_proxy")
+    def on_restart_ossftp(self, widget=None, data=None):
+        module_init.stop_all()
+        module_init.start_all_auto()
 
     def on_quit(self, widget, data=None):
         gtk.main_quit()

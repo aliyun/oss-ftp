@@ -43,6 +43,6 @@ function tipHasClose() {
     return $('#tip').hasClass('hide');
 }
 
-$('#tip-close').click(function() {
-    tipClose();
-});
+//$('#tip-close').click(function() {
+    //tipClose();
+//});
