@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import oss2
 from . import oss_file_operation
 from . import defaults
@@ -31,7 +32,7 @@ class OssFsImpl:
 
     def getOSSBucketName(self, path):
         if self.isRoot(path):
-            return "/"
+            return u'/'
         phyPath = self.stripLastDelimiter(path)
         index = phyPath.find('/', 1)
         if index <= 0:
@@ -43,13 +44,13 @@ class OssFsImpl:
         if self.isBucket(path):
             return ""
         if path == '/':
-            return '/'
+            return u'/'
         bucket = self.getOSSBucketName(path)
         return path[len(bucket)+2:]
     
     def getParentPhysicalName(self, path):
         if path == '/':
-            return '/'
+            return u'/'
 
         parentPath = self.stripLastDelimiter(path)
 
@@ -71,12 +72,12 @@ class OssFsImpl:
         normalizedCurDir = curDir
         if normalizedFileName[0] != '/':
             if normalizedCurDir == None:
-                normalizedCurDir = '/'
+                normalizedCurDir = u'/'
             if normalizedCurDir == '':
-                normalizedCurDir = '/'
+                normalizedCurDir = u'/'
             normalizedCurDir = self.normalizeSeparateChar(normalizedCurDir)
             if normalizedCurDir[0] != '/':
-                normalizedCurDir = '/' + normalizedCurDir
+                normalizedCurDir = u'/' + normalizedCurDir
             if normalizedCurDir[-1] != '/':
                 normalizedCurDir = normalizedCurDir + '/'
             resArg = normalizedRootDir + normalizedCurDir[1:]

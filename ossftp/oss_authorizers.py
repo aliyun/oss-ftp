@@ -1,24 +1,17 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.authorizers import AuthenticationFailed
 from pyftpdlib.authorizers import AuthorizerError
-from pyftpdlib._compat import PY3, unicode, getcwdu
-
-import os
-import warnings
-import errno
-import sys
 import time
-import socket
 
 import oss2
 from . import defaults
 
 class OssAuthorizer(DummyAuthorizer):
-    read_perms = "elr"
-    write_perms = "adfmwM"
-    default_location = "oss-cn-hangzhou"
-    default_endpoint = "oss-cn-hangzhou.aliyuncs.com"
+    read_perms = u"elr"
+    write_perms = u"adfmwM"
+    default_location = u"oss-cn-hangzhou"
+    default_endpoint = u"oss-cn-hangzhou.aliyuncs.com"
     internal = None
     
     def __init__(self):
@@ -27,7 +20,7 @@ class OssAuthorizer(DummyAuthorizer):
         self.error_bucket_expire_time = 5
 
     def parse_username(self, username):
-        if username == "":
+        if len(username) == 0:
             raise AuthorizerError("username can't be empty!")
         index = username.rfind('/')
         if index == -1:
@@ -45,9 +38,9 @@ class OssAuthorizer(DummyAuthorizer):
             access_key_dict = {}
             access_key_dict[access_id] = access_key
             self.bucket_info_table[bucket_name] = {
-                    "endpoint": endpoint,
-                    "access_key_dict": access_key_dict,
-                    "info_expire_time": info_expire_time
+                    u"endpoint": endpoint,
+                    u"access_key_dict": access_key_dict,
+                    u"info_expire_time": info_expire_time
             }
         else:
             #may need to update info
@@ -88,7 +81,7 @@ class OssAuthorizer(DummyAuthorizer):
             bucket_list = res.buckets
             for bucket in bucket_list:
                 if bucket.name == bucket_name:
-                    endpoint = self.get_endpoint(bucket_name, bucket.location, access_id, access_key)
+                    endpoint = self.get_endpoint(bucket_name, bucket.location.decode('utf-8'), access_id, access_key)
                     return endpoint
             raise AuthenticationFailed("can't find the bucket %s when list buckets." % bucket_name) 
         except oss2.exceptions.OssError as e:
@@ -99,10 +92,8 @@ class OssAuthorizer(DummyAuthorizer):
         password don't match the stored credentials, else return
         None.
         """
-        print username, password
         bucket_name, access_id = self.parse_username(username)
         access_key = password
-        print "bucket_name %s, access_id:%s, access_key:%s" % (bucket_name, access_id, access_key)
         endpoint = self._check_loggin(bucket_name, self.default_endpoint, access_id, access_key)
         self.put_bucket_info(bucket_name, endpoint, access_id, access_key)
 
@@ -151,11 +142,11 @@ class OssAuthorizer(DummyAuthorizer):
     def get_msg_login(self, username):
         """Return the user's login message."""
         bucket_name, access_id = self.parse_username(username)
-        msg = "login to bucket: %s with access_id: %s" % (bucket_name, access_id)
+        msg = u"login to bucket: %s with access_id: %s" % (bucket_name, access_id)
         return msg 
 
     def get_msg_quit(self, username):
         """Return the user's quitting message."""
         bucket_name, access_id = self.parse_username(username)
-        msg = "logout of bucket: %s with access_id: %s" % (bucket_name, access_id)
+        msg = u"logout of bucket: %s with access_id: %s" % (bucket_name, access_id)
         return msg 
