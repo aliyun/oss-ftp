@@ -8,10 +8,21 @@ from pyftpdlib.servers import FTPServer
 
 import ossftp
 
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc: 
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
 def set_logger(log_level):
     #log related
-    log = "ossftp.log"
-    LOGFILE = os.path.join('.', log)
+    work_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+    log_dir = work_dir + '/data/ossftp/'
+    mkdir_p(log_dir)
+    LOGFILE = log_dir + "ossftp.log"
     MAXLOGSIZE = 10*1024*1024 #Bytes
     BACKUPCOUNT = 30
     FORMAT = \
