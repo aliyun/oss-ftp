@@ -28,7 +28,6 @@ setup(
     long_description=readme,
     packages=['ossftp'],
     install_requires=['oss2>=2.0.3', 
-        'pyOpenSSL', 
         'pyftpdlib>=1.5.0'
         ],
     include_package_data=True,
