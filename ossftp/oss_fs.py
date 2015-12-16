@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import sys
 import time
@@ -16,6 +17,7 @@ from . import oss_fs_impl
 class OssFS(AbstractedFS):
     
     def __init__(self, root, cmd_channel):
+        assert isinstance(root, unicode), root
         AbstractedFS.__init__(self, root, cmd_channel)
         bucket_name = root.strip('/')
         bucket_info_dict = cmd_channel.authorizer.get_bucket_info(bucket_name)

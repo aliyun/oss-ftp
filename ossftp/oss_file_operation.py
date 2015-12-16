@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from pyftpdlib._compat import PY3, u, unicode
 from pyftpdlib.filesystems import FilesystemError
 import time
@@ -145,14 +146,14 @@ class OssFileOperation:
                 self.object_list.append(object_info)
         self.contents = []
         for entry in self.object_list:
-            toAdd = entry.key[len(object):].decode('utf-8')
+            toAdd = entry.key.decode('utf-8')[len(object):]
             last_modified = entry.last_modified
             last_modified_str = datetime.datetime.fromtimestamp(last_modified).strftime('%Y/%m/%d %H:%M:%S')
             self.contents.append((toAdd, entry.size, last_modified_str.decode('utf-8')))
             self.cache_set(self.size_cache, (self.bucket.bucket_name, entry.key), entry.size)
         for entry in self.dir_list:
-            toAdd = entry[len(object):]
-            self.contents.append((toAdd.decode('utf-8'), -1, 0))
+            toAdd = entry.decode('utf-8')[len(object):]
+            self.contents.append((toAdd, -1, 0))
         return self.contents
         
     def isfile(self):
@@ -259,6 +260,7 @@ class OssFileOperation:
             retry -= 1
             try:
                 self.bucket.delete_object(object)
+                return
             except OssError as e:
                 status, code, request_id = e.status, e.code, e.request_id
         raise FilesystemError("delete object failed. bucket:%s, object:%s, \
