@@ -19,7 +19,7 @@ def mkdir_p(path):
 
 def set_logger(log_level):
     #log related
-    work_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
+    work_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)
     log_dir = work_dir + '/data/ossftp/'
     mkdir_p(log_dir)
     LOGFILE = log_dir + "ossftp.log"
