@@ -7,7 +7,7 @@ import types
 
 import oss2
 from oss2.exceptions import *
-from . import defaults
+import defaults
 
 class TrickFile:
     def __init__(self, name, resp):

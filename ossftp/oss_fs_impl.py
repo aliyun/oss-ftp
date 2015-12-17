@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 import oss2
-from . import oss_file_operation
-from . import defaults
+import oss_file_operation
+import defaults
 from pyftpdlib.filesystems import FilesystemError
 
 class OssFsImpl:
-   
 
     def __init__(self, bucket_name, endpoint, access_id, access_key):
         self.bucket_name = bucket_name

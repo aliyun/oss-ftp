@@ -2,11 +2,13 @@
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+import errno
 from optparse import OptionParser
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
 
-import ossftp
+from oss_authorizers import OssAuthorizer 
+from oss_fs import OssFS
 
 def mkdir_p(path):
     try:
@@ -17,9 +19,9 @@ def mkdir_p(path):
         else:
             raise
 
-def set_logger(log_level):
+def set_logger(level):
     #log related
-    work_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)
+    work_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
     log_dir = work_dir + '/data/ossftp/'
     mkdir_p(log_dir)
     LOGFILE = log_dir + "ossftp.log"
@@ -34,19 +36,27 @@ def set_logger(log_level):
     formatter = logging.Formatter(FORMAT)
     handler.setFormatter(formatter)
     logger = logging.getLogger()
-    logger.setLevel(log_level)
+    logger.setLevel(level)
     logger.addHandler(handler)
 
-def start_ftp(masquerade_address, port, internal, level):
+def start_ftp(masquerade_address, port, internal, log_level):
 
-    authorizer = ossftp.OssAuthorizer()
+    if log_level == "DEBUG":
+        level = logging.DEBUG
+    elif log_level == "INFO":
+        level = logging.INFO
+    else:
+        print "wrong loglevel parameter: %s" % log_level
+        exit(1)
+
+    authorizer = OssAuthorizer()
     authorizer.internal = internal
     handler = FTPHandler
     handler.permit_foreign_addresses = True
     if handler.masquerade_address != "":
         handler.masquerade_address = masquerade_address 
     handler.authorizer = authorizer
-    handler.abstracted_fs = ossftp.OssFS
+    handler.abstracted_fs = OssFS
     handler.banner = 'oss ftpd ready.'
     address = ('0.0.0.0', port)
     set_logger(level)
@@ -57,7 +67,7 @@ def main(args, opts):
     masquerade_address = ""
     port = 21
     internal = None
-    loglevel = "DEBUG"
+    log_level = "DEBUG"
     if opts.masquerade_address:
         masquerade_address = opts.masquerade_address
     if opts.port:
@@ -70,16 +80,9 @@ def main(args, opts):
         internal = opts.internal
 
     if opts.loglevel:
-        loglevel = opts.loglevel
-    if loglevel == "DEBUG":
-        level = logging.DEBUG
-    elif loglevel == "INFO":
-        level = logging.INFO
-    else:
-        print "wrong loglevel parameter: %s" % loglevel
-        exit(1)
+        log_level = opts.loglevel
 
-    start_ftp(masquerade_address, port, internal, level)
+    start_ftp(masquerade_address, port, internal, log_level)
     
 if __name__ == '__main__':
     parser = OptionParser()
