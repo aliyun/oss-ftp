@@ -16,9 +16,10 @@ class OssFS(AbstractedFS):
         assert isinstance(root, unicode), root
         AbstractedFS.__init__(self, root, cmd_channel)
         bucket_name = root.strip('/')
-        bucket_info_dict = cmd_channel.authorizer.get_bucket_info(bucket_name)
-        access_id, access_key = bucket_info_dict["access_key_dict"].items()[0]
-        self.oss_fs_impl = oss_fs_impl.OssFsImpl(bucket_name, bucket_info_dict["endpoint"], access_id, access_key)
+        bucket_info = cmd_channel.authorizer.get_bucket_info(bucket_name)
+        access_key_id, access_key_secret= bucket_info.access_key.items()[0]
+        endpoint = bucket_info.endpoint
+        self.oss_fs_impl = oss_fs_impl.OssFsImpl(bucket_name, endpoint, access_key_id, access_key_secret)
     
     def open(self, filename, mode):
         assert isinstance(filename, unicode), filename
