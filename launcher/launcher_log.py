@@ -78,7 +78,6 @@ def dummy(*args, **kwargs):
 def debug(fmt, *args, **kwargs):
     __set_debug_color()
     log('DEBUG', fmt, *args, **kwargs)
-    xlog.debug(fmt, *args, **kwargs)
     __reset_color()
 
 def info(fmt, *args, **kwargs):
