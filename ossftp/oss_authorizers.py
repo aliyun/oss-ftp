@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+import os
+import logging
+
 from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.authorizers import AuthenticationFailed
 from pyftpdlib.authorizers import AuthorizerError
 import time
 
 import oss2
-from . import defaults
-
+import defaults
 class OssAuthorizer(DummyAuthorizer):
     read_perms = u"elr"
     write_perms = u"adfmwM"
@@ -31,6 +33,20 @@ class OssAuthorizer(DummyAuthorizer):
             raise AuthorizerError("ACCESS_ID can't be empty!")
 
         return  username[index+1:], username[:index]
+    
+    def log_bucket_info(self, bucket_name, endpoint, access_id):
+        work_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+        file_name = work_dir + '/data/ossftp/ossftp.info'
+        logger = logging.getLogger('pyftpdlib')
+        try:
+            f = open(file_name, 'a')
+            time_str = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+            record = "%s\tBucket:%s\tEndpoint:%s\tAccessID:%s\n" % (time_str, bucket_name, endpoint, access_id)
+            f.write(record)
+            f.close()
+            logger.info("recording bucket access info succeed.%s" % record)
+        except IOError as err:
+            logger.error("error recording bucket access info.%s" % unicode(err))
 
     def put_bucket_info(self, bucket_name, endpoint, access_id, access_key):
         info_expire_time = time.time() + self.expire_time
@@ -42,6 +58,7 @@ class OssAuthorizer(DummyAuthorizer):
                     u"access_key_dict": access_key_dict,
                     u"info_expire_time": info_expire_time
             }
+            self.log_bucket_info(bucket_name, endpoint, access_id)
         else:
             #may need to update info
             if access_id not in self.bucket_info_table[bucket_name]["access_key_dict"]:
