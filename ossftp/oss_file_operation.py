@@ -149,21 +149,16 @@ class OssFileOperation:
         return self.contents
         
     def isfile(self):
-        value = self.cache_get(self.dir_cache, (self.bucket.bucket_name, self.key))
-        if value is not None:
-            return not value
-        self.listdir()
-        value = (len(self.contents) == 0)
-        self.cache_set(self.dir_cache, (self.bucket.bucket_name, self.key), not value)
-        return value
+        return not self.isdir()
 
     def isdir(self):
         value = self.cache_get(self.dir_cache, (self.bucket.bucket_name, self.key))
         if value is not None:
             return value
-        value = not self.isfile()
-        self.cache_set(self.dir_cache, (self.bucket.bucket_name, self.key), value)
-        return value
+        contents = self.listdir()
+        _is_dir = not (len(contents) == 0)
+        self.cache_set(self.dir_cache, (self.bucket.bucket_name, self.key), _is_dir)
+        return _is_dir
     
     def cache_get(self, cache, key):
         if cache.has_key(key) and cache[key][1] + self.expire_time >= time.time():

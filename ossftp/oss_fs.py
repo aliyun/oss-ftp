@@ -131,7 +131,7 @@ class OssFS(AbstractedFS):
                 size = 0
             
             line = "%s %3s %-8s %-8s %8s %s %s\r\n" % (perms, nlinks, uname, gname,
-                                                       size, mtimestr, basename)
+                                                       size, mtimestr, basename.rstrip('/'))
             yield line.encode('utf8', self.cmd_channel.unicode_errors)
     
     def format_mlsx(self, basedir, listing, perms, facts, ingore_err=True):
@@ -185,5 +185,5 @@ class OssFS(AbstractedFS):
                 retfacts['modify'] = modify[:4] + modify[5:7] + modify[8:10] + modify[11:13] + modify[14:16] + modify[17:19]
             factstring = "".join(["%s=%s;" % (x, retfacts[x]) \
                                   for x in sorted(retfacts.keys())])
-            line = "%s %s\r\n" % (factstring, basename)
+            line = "%s %s\r\n" % (factstring, basename.rstrip('/'))
             yield line.encode('utf8', self.cmd_channel.unicode_errors) 
