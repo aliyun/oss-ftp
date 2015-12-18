@@ -33,13 +33,13 @@ OSS FTP是一个基于OSS存储提供FTP访问的工具。详情请参考
 作者所用Disquz版本为**Discuz! X3.1**，下面是作者的详细设置流程，亲测可行。
 
 
-
 *  登录Discuz站点，进入管理界面后，先点击**全局**，再点击**上传设置**，如下图所示
    
 ![全局入口](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/disquz-main.png)
 
 *  选择**远程附件**，然后开始设置
 ![设置1](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/disquz-setting-1.png)
+
 如上图所示：
 
     1.  选择**启用远程附件**
@@ -70,8 +70,10 @@ OSS FTP是一个基于OSS存储提供FTP访问的工具。详情请参考
 好了，现在我们去论坛发帖试试。
 随意找个板块，发贴时上传图片附件如下所示
 ![post](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/disquz-post.png)
+
 在图片上右键点击，选择在“新建标签页”中打开图片，如下所示
 ![post](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/disquz-img-assert.png)
+
 这里看到浏览器中图片的URL为 http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/forum/201512/18/171012mzvkku2z3na2w2wa.png, 这就表示图片已经上传到了OSS的test-hz-jh-002中。
 
 ----------
@@ -92,8 +94,10 @@ OSS FTP是一个基于OSS存储提供FTP访问的工具。详情请参考
 *  发帖验证
 phpwind不能在设置好直接点击测试，我们这里发带图片的帖子来验证下
 ![phpwind post](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/phpwind-post.png)
+
 在图片点击右键，在新建标签页中打开图片，可以看到下图
 ![phpwind img assert](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/phpwind-img-assert.png)
+
 通过图中的URL，我们可以判断图片已经上传到了OSS的test-hz-jh-002 Bucket中。
 
 ----------
@@ -116,16 +120,21 @@ wordpress本身是不支持远程附件功能的，但是可以通过第三方�
 *   HTTP远程路径填.即可
 具体信息见下图的配置
 ![wordpress setting](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/wordpress-setting.png)
+
 3.  验证
 设置好之后，点击保存的同时，会做测试，测试结果会在页面上方显示，如下图所示表示测试成功
 ![wordpress test](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/wordpress-save-and-test.png)
+
 4.  发布新文章， 并插入图片
 现在开始写一篇新文章，并测试远程附件。创建好文章后，点击添加媒体来上传附件
 ![wordpress new post](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/wordpress-new-post.png)
+
 上传附件如下图所示
 ![wordpress upload img](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/wordpress-upload-img.png)
+
 5. 上传完附件，点击发布，即可看到文章了。
 ![wordpress post](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/wordpress-post.png)
+
 仍然通过右键点击图片，通过新建链接来打开图片即可看到图片的URL如下图所示
 ![wordpress assert](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/wordpress-img-assert.png)
 
