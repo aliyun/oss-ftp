@@ -74,7 +74,7 @@ class MacTrayObject(NSObject):
         NSApp.terminate_(self)
 
     def config_(self, notification):
-        webbrowser.open_new("http://127.0.0.1:8085/")
+        webbrowser.open_new("http://127.0.0.1:8192/")
 
     #Note: the function name for action can include '_'
     # limited by Mac cocoa

@@ -17,16 +17,19 @@ import threading
 import urllib2
 import time
 import datetime
+from xlog import LogFileTailer
 
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
+ossftp_log_path = os.path.join(root_path, "data", "ossftp", "ossftp.log")
+ossftp_log_tailer = LogFileTailer(ossftp_log_path)
 
 import json
 from collections import OrderedDict
-import xlog
 import launcher_log
 import module_init
 import config
 import autorun
+
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
@@ -248,14 +251,14 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
                     , config.get(["modules", "ossftp", "port"], 21)
-                    , config.get(["modules", "ossftp", "log_level"], 'info'))
+                    , config.get(["modules", "ossftp", "log_level"], 'INFO'))
         elif reqs['cmd'] == ['set_config']:
             success = True
             popup_webui = config.get(["modules", "launcher", "popup_webui"], 1)
             auto_start = config.get(["modules", "launcher", "auto_start"], 0)
             show_systray = config.get(["modules", "launcher", "show_systray"], 1)
             ossftp_port = config.get(["modules", "ossftp", "port"], 21)
-            ossftp_loglevel = config.get(["modules", "ossftp", "log_level"], 'info')
+            ossftp_loglevel = config.get(["modules", "ossftp", "log_level"], 'INFO')
             data = '{"res":"fail"}'
             if success and 'popup_webui' in reqs :
                 popup_webui = int(reqs['popup_webui'][0])
@@ -278,10 +281,10 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     success = False
                     data = '{"res":"fail, ilegal ossftp port: %d"}' % ossftp_port
             if success and 'ossftp_loglevel' in reqs:
-                ossftp_loglevel = reqs['ossftp_loglevel'][0].strip().lower()
-                if (ossftp_loglevel not in ['debug', 'info', 'warning', 'error', 'critical']):
+                ossftp_loglevel = reqs['ossftp_loglevel'][0].strip().upper()
+                if (ossftp_loglevel not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']):
                     success = False
-                    data = '{"res":"fail, illegal ossftp log level: %s. Must be: debug, info, warning, error, critical"}' % ossftp_loglevel
+                    data = '{"res":"fail, illegal ossftp log level: %s. Must be: DEBUG, INFO, WARNING, ERROR, CRITICAL"}' % ossftp_loglevel
                 
             if success:
                 config.set(["modules", "launcher", "popup_webui"], popup_webui)
@@ -309,23 +312,12 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         cmd = "get_last"
         if reqs["cmd"]:
             cmd = reqs["cmd"][0]
-        if cmd == "set_buffer_size" :
-            if not reqs["buffer_size"]:
-                data = '{"res":"fail", "reason":"size not set"}'
-                mimetype = 'text/plain'
-                self.send_response(mimetype, data)
-                return
-
-            buffer_size = reqs["buffer_size"][0]
-            xlog.set_buffer_size(buffer_size)
-        elif cmd == "get_last":
-            max_line = int(reqs["max_line"][0])
-            data = xlog.get_last_lines(max_line)
-        elif cmd == "get_new":
+        
+        if cmd == "get_new":
             last_no = int(reqs["last_no"][0])
-            data = xlog.get_new_lines(last_no)
+            data = ossftp_log_tailer.get_lines(last_no)
         else:
-            xlog.error('PAC %s %s %s ', self.address_string(), self.command, self.path)
+            data = '{"res":"fail", "reason":"wrong cmd: %s"%cmd}'
 
         mimetype = 'text/plain'
         self.send_response(mimetype, data)
@@ -368,7 +360,7 @@ process = 0
 server = 0
 def start():
     global process, server
-    server = LocalServer(("0.0.0.0", 8085), Http_Handler)
+    server = LocalServer(("0.0.0.0", 8192), Http_Handler)
     process = threading.Thread(target=server.serve_forever)
     process.setDaemon(True)
     process.start()
@@ -399,11 +391,7 @@ def http_request(url, method="GET"):
 def confirm_ossftp_exit():
     launcher_log.debug("start confirm_ossftp_exit")
     for i in range(30):
-        if http_request("http://127.0.0.1:8087/quit") == False:
-            return True
-        time.sleep(1)
-    for i in range(30):
-        if http_request("http://127.0.0.1:8085/quit") == False:
+        if http_request("http://127.0.0.1:8192/quit") == False:
             return True
         time.sleep(1)
     launcher_log.debug("finished confirm_ossftp_exit")

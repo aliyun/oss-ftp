@@ -45,6 +45,12 @@ def start_ftp(masquerade_address, port, internal, log_level):
         level = logging.DEBUG
     elif log_level == "INFO":
         level = logging.INFO
+    elif log_level == "WARNING":
+        level = logging.WARNING
+    elif log_level == "ERROR":
+        level = logging.ERROR
+    elif log_level == "CRITICAL":
+        level = logging.CRITICAL
     else:
         print "wrong loglevel parameter: %s" % log_level
         exit(1)

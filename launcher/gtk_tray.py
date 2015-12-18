@@ -77,7 +77,7 @@ class Gtk_tray():
         return True
 
     def show_control_web(self, widget=None, data=None):
-        webbrowser.open_new("http://127.0.0.1:8085/")
+        webbrowser.open_new("http://127.0.0.1:8192/")
 
     def on_restart_ossftp(self, widget=None, data=None):
         module_init.stop_all()

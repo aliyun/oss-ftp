@@ -67,7 +67,7 @@ def recheck_module_path():
 
     if get(["modules", "launcher", "control_port"], 0) == 0:
         need_save_config = True
-        set(["modules", "launcher", "control_port"], 8085)
+        set(["modules", "launcher", "control_port"], 8192)
 
     return need_save_config
 

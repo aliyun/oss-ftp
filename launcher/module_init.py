@@ -5,6 +5,7 @@ import os
 import sys
 import config
 
+
 import web_control
 import time
 proc_handler = {}
@@ -31,14 +32,24 @@ def start(module):
         if module not in proc_handler:
             proc_handler[module] = {}
 
-        script_path = os.path.join(root_path, 'ftpserver.py')
-        if not os.path.isfile(script_path):
-            launcher_log.warn("start module script not exist:%s", script_path)
-            return "fail"
-
-        proc_handler[module]["proc"] = subprocess.Popen([sys.executable, script_path], shell=False)
-
-
+        if module == 'ossftp':
+            masquerade_address = config.get(["modules", "ossftp", "masquerade_address"], "")
+            port = config.get(["modules", "ossftp", "port"], 21)
+            is_internal = config.get(["modules", "ossftp", "internal"], None)
+            log_level = config.get(["modules", "ossftp", "log_level"], "INFO")
+            script_path = os.path.join(root_path, 'ossftp', 'ftpserver.py')
+            if not os.path.isfile(script_path):
+                launcher_log.critical("start module script not exist:%s", script_path)
+                return "fail"
+            cmd = [sys.executable, script_path, "--port=%d"%port, "--loglevel=%s"%log_level]
+            
+            proc_handler[module]["proc"] = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            #t = threading.Thread(target = ftpserver.start_ftp, args = (masquerade_address, port, is_internal, log_level))
+            #t.start()
+            #proc_handler[module]["proc"] = t
+        else:
+            raise ValueError("Wrong module: %s" % module)
+        
         launcher_log.info("%s started", module)
 
     except Exception as e:
@@ -51,6 +62,7 @@ def stop(module):
         if not module in proc_handler:
             launcher_log.error("module %s not running", module)
             return
+        
         proc_handler[module]["proc"].terminate()  # Sends SIGTERM
         proc_handler[module]["proc"].wait()
 

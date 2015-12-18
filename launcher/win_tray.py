@@ -82,7 +82,7 @@ class Win_tray():
         update.check_update()
 
     def show_control_web(self, widget=None, data=None):
-        webbrowser.open("http://127.0.0.1:8085/")
+        webbrowser.open("http://127.0.0.1:8192/")
         ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
     def on_quit(self, widget, data=None):
