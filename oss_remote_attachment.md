@@ -114,31 +114,31 @@ phpwind不能在设置好直接点击测试，我们这里发带图片的帖子�
 ### Wordpress用户如何使用OSS存储远程附件
 wordpress本身是不支持远程附件功能的，但是可以通过第三方的插件来做远程附件。作者所用wordpress版本为**4.3.1**, 所用插件为**Hacklog Remote Attachment**，以下为具体设置步骤
 
-1.  登录wordpress站点，选择安装插件，搜关键词FTP,选择**Hacklog Remote Attachment**安装
+*  登录wordpress站点，选择安装插件，搜关键词FTP,选择**Hacklog Remote Attachment**安装
 
 ![wordpress plugin](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/wordpress-plugin.png)
 
-2.  设置
+*  设置
 
-*   FTP服务器填其ip地址或域名
-*   FTP服务器端口填21（默认）
-*   FTP用户名为AccessKeyID/BucketName
-*   FTP密码为AccessKeySecret
-*   远程基本URL填 http://BucketName.Endpoint
-*   FTP远程路径填wp(可自定义)，注意不要加/
-*   HTTP远程路径填.即可
+>  *   FTP服务器填其ip地址或域名
+>  *   FTP服务器端口填21（默认）
+>  *   FTP用户名为AccessKeyID/BucketName
+>  *   FTP密码为AccessKeySecret
+>  *   远程基本URL填 http://BucketName.Endpoint
+>  *   FTP远程路径填wp(可自定义)，注意不要加/
+>  *   HTTP远程路径填.即可
 
 具体信息见下图的配置
 
 ![wordpress setting](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/wordpress-setting.png)
 
-3.  验证
+*  验证
 
 设置好之后，点击保存的同时，会做测试，测试结果会在页面上方显示，如下图所示表示测试成功
 
 ![wordpress test](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/wordpress-save-and-test.png)
 
-4.  发布新文章， 并插入图片
+*  发布新文章， 并插入图片
 
 现在开始写一篇新文章，并测试远程附件。创建好文章后，点击添加媒体来上传附件
 
@@ -148,7 +148,7 @@ wordpress本身是不支持远程附件功能的，但是可以通过第三方�
 
 ![wordpress upload img](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/wordpress-upload-img.png)
 
-5. 上传完附件，点击发布，即可看到文章了。
+*  上传完附件，点击发布，即可看到文章了。
 
 ![wordpress post](http://test-hz-jh-002.oss-cn-hangzhou.aliyuncs.com/wordpress-post.png)
 
