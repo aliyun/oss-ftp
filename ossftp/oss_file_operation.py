@@ -57,12 +57,12 @@ class OssFileOperation:
         self.part_list = []
         self.contents = None
 
-   
     @retry
     def init_multi_upload(self):
         resp = self.bucket.init_multipart_upload(self.key)
         self.upload_id = resp.upload_id
         self.part_num = 0
+        self.part_list = []
         return self.upload_id
 
     def get_upload_id(self):

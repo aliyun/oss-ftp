@@ -143,6 +143,7 @@ class OssFsImpl:
     
     def getsize(self, path):
         return self.get_file_operation_instance(path).getsize()
+
     def getmodify(self, path):
         raise FilesystemError("method getmodify not implied")
     

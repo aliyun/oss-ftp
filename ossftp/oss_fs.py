@@ -66,7 +66,7 @@ class OssFS(AbstractedFS):
         
     def chmod(self, path, mode):
         assert isinstance(path, unicode), path
-        #raise NotImplementedError
+        raise FilesystemError("method chmod is not implied") 
     
     def getsize(self, path):
         assert isinstance(path, unicode), path
