@@ -24,7 +24,6 @@ import launcher_log
 import module_init
 import config
 import autorun
-from ossftp.ftpd import FTPd
 
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)

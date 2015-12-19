@@ -18,31 +18,7 @@ class FTPd(threading.Thread):
     handler = FTPHandler
     server_class = FTPServer
 
-    def __init__(self, masquerade_address, port, internal, log_level):
-        threading.Thread.__init__(self)
-        self.__serving = False
-        self.__stopped = False
-        self.__lock = threading.Lock()
-        self.__flag = threading.Event()
-
-        __set_logger()
-
-        authorizer = OssAuthorizer()
-        authorizer.internal = internal
-        self.handler.authorizer = authorizer
-        self.handler.permit_foreign_addresses = True
-        if handler.masquerade_address != "":
-            self.handler.masquerade_address = masquerade_address 
-        self.handler.abstracted_fs = OssFS
-        self.handler.banner = 'oss ftpd ready.'
-        # lower buffer sizes = more "loops" while transfering data
-        # = less false positives
-        self.handler.dtp_handler.ac_in_buffer_size = 4096
-        self.handler.dtp_handler.ac_out_buffer_size = 4096
-        address = ('0.0.0.0', port)
-        self.server = self.server_class(address, self.handler)
-
-    def __set_logger():
+    def __set_logger(self, log_level):
         work_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
         log_dir = work_dir + '/data/ossftp/'
         try:
@@ -77,6 +53,30 @@ class FTPd(threading.Thread):
             print "wrong loglevel parameter: %s" % log_level
             exit(1)
         logger.addHandler(handler)
+
+    def __init__(self, masquerade_address, port, internal, log_level):
+        threading.Thread.__init__(self)
+        self.__serving = False
+        self.__stopped = False
+        self.__lock = threading.Lock()
+        self.__flag = threading.Event()
+
+        self.__set_logger(log_level)
+
+        authorizer = OssAuthorizer()
+        authorizer.internal = internal
+        self.handler.authorizer = authorizer
+        self.handler.permit_foreign_addresses = True
+        if self.handler.masquerade_address != "":
+            self.handler.masquerade_address = masquerade_address 
+        self.handler.abstracted_fs = OssFS
+        self.handler.banner = 'oss ftpd ready.'
+        # lower buffer sizes = more "loops" while transfering data
+        # = less false positives
+        self.handler.dtp_handler.ac_in_buffer_size = 4096
+        self.handler.dtp_handler.ac_out_buffer_size = 4096
+        address = ('0.0.0.0', port)
+        self.server = self.server_class(address, self.handler)
 
     def __repr__(self):
         status = [self.__class__.__module__ + "." + self.__class__.__name__]

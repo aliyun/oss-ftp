@@ -5,13 +5,13 @@ import os, sys
 import time
 import atexit
 import webbrowser
-
 import launcher_log
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
-sys.path.append(noarch_lib)
+root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+if root_path not in sys.path:
+    sys.path.append(root_path)
+from ossftp.ftpd import FTPd
 
 has_desktop = True
 if sys.platform.startswith("linux"):

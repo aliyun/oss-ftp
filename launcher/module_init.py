@@ -39,17 +39,15 @@ def start(module):
             port = config.get(["modules", "ossftp", "port"], 21)
             is_internal = config.get(["modules", "ossftp", "internal"], None)
             log_level = config.get(["modules", "ossftp", "log_level"], "INFO")
-            script_path = os.path.join(root_path, 'ossftp', 'ftpserver.py')
-            if not os.path.isfile(script_path):
-                launcher_log.critical("start module script not exist:%s", script_path)
-                return "fail"
-            cmd = [sys.executable, script_path, "--port=%d"%port, "--loglevel=%s"%log_level]
-            
-            proc_handler[module]["proc"] = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            #proc_handler[module]["proc"] = Ftp
-            #t = threading.Thread(target = ftpserver.start_ftp, args = (masquerade_address, port, is_internal, log_level))
-            #t.start()
-            #proc_handler[module]["proc"] = t
+            #script_path = os.path.join(root_path, 'ossftp', 'ftpserver.py')
+            #if not os.path.isfile(script_path):
+                #launcher_log.critical("start module script not exist:%s", script_path)
+                #return "fail"
+            #cmd = [sys.executable, script_path, "--port=%d"%port, "--loglevel=%s"%log_level]
+            #proc_handler[module]["proc"] = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            t = FTPd(masquerade_address, port, is_internal, log_level)
+            t.start()
+            proc_handler[module]["proc"] = t
         else:
             raise ValueError("Wrong module: %s" % module)
         
@@ -66,8 +64,9 @@ def stop(module):
             launcher_log.error("module %s not running", module)
             return
         
-        proc_handler[module]["proc"].terminate()  # Sends SIGTERM
-        proc_handler[module]["proc"].wait()
+        #proc_handler[module]["proc"].terminate()  # Sends SIGTERM
+        #proc_handler[module]["proc"].wait()
+        proc_handler[module]["proc"].stop()
 
         del proc_handler[module]
 
