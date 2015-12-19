@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import os
+import time
 import logging
 
 from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.authorizers import AuthenticationFailed
 from pyftpdlib.authorizers import AuthorizerError
-import time
-
 import oss2
+
 import defaults
 
 class BucketLoginInfo():

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+from pyftpdlib.filesystems import FilesystemError
 import oss2
+
 import oss_file_operation
 import defaults
-from pyftpdlib.filesystems import FilesystemError
 
 class OssFsImpl:
 
