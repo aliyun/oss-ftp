@@ -2,12 +2,6 @@
 
 import os, sys
 
-current_path = os.path.dirname(os.path.abspath(__file__))
-if __name__ == "__main__":
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
-    sys.path.append(noarch_lib)
-
 import re
 import SocketServer, socket, ssl
 import BaseHTTPServer
@@ -19,6 +13,7 @@ import time
 import datetime
 from xlog import LogFileTailer
 
+current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 ossftp_log_path = os.path.join(root_path, "data", "ossftp", "ossftp.log")
 ossftp_log_tailer = LogFileTailer(ossftp_log_path)
@@ -29,6 +24,7 @@ import launcher_log
 import module_init
 import config
 import autorun
+from ossftp.ftpd import FTPd
 
 
 NetWorkIOError = (socket.error, ssl.SSLError, OSError)

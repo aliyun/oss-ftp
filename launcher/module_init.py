@@ -16,6 +16,8 @@ root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 if root_path not in sys.path:
     sys.path.append(root_path)
 
+from ossftp.ftpd import FTPd
+
 def start(module):
     if not os.path.isdir(os.path.join(root_path, module)):
         return
@@ -44,6 +46,7 @@ def start(module):
             cmd = [sys.executable, script_path, "--port=%d"%port, "--loglevel=%s"%log_level]
             
             proc_handler[module]["proc"] = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            #proc_handler[module]["proc"] = Ftp
             #t = threading.Thread(target = ftpserver.start_ftp, args = (masquerade_address, port, is_internal, log_level))
             #t.start()
             #proc_handler[module]["proc"] = t

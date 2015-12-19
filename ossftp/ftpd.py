@@ -1,0 +1,124 @@
+# -*- coding: utf-8 -*-
+import logging
+import threading
+from logging.handlers import RotatingFileHandler
+import os
+import errno
+from optparse import OptionParser
+from pyftpdlib.handlers import FTPHandler
+from pyftpdlib.servers import FTPServer
+
+from oss_authorizers import OssAuthorizer 
+from oss_fs import OssFS
+
+class FTPd(threading.Thread):
+    """
+    A threaded ftp server.
+    """
+    handler = FTPHandler
+    server_class = FTPServer
+
+    def __init__(self, masquerade_address, port, internal, log_level):
+        threading.Thread.__init__(self)
+        self.__serving = False
+        self.__stopped = False
+        self.__lock = threading.Lock()
+        self.__flag = threading.Event()
+
+        __set_logger()
+
+        authorizer = OssAuthorizer()
+        authorizer.internal = internal
+        self.handler.authorizer = authorizer
+        self.handler.permit_foreign_addresses = True
+        if handler.masquerade_address != "":
+            self.handler.masquerade_address = masquerade_address 
+        self.handler.abstracted_fs = OssFS
+        self.handler.banner = 'oss ftpd ready.'
+        # lower buffer sizes = more "loops" while transfering data
+        # = less false positives
+        self.handler.dtp_handler.ac_in_buffer_size = 4096
+        self.handler.dtp_handler.ac_out_buffer_size = 4096
+        address = ('0.0.0.0', port)
+        self.server = self.server_class(address, self.handler)
+
+    def __set_logger():
+        work_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+        log_dir = work_dir + '/data/ossftp/'
+        try:
+            os.makedirs(log_dir)
+        except OSError as exc: 
+            if exc.errno == errno.EEXIST and os.path.isdir(log_dir):
+                pass
+            else:
+                raise
+        LOGFILE = os.path.join(log_dir, "ossftp.log")
+        MAXLOGSIZE = 10*1024*1024 #Bytes
+        BACKUPCOUNT = 30
+        FORMAT = "%(asctime)s %(levelname)-8s[%(filename)s:%(lineno)d(%(funcName)s)] %(message)s"
+        handler = RotatingFileHandler(LOGFILE,
+                mode='w',
+                maxBytes=MAXLOGSIZE,
+                backupCount=BACKUPCOUNT)
+        formatter = logging.Formatter(FORMAT)
+        handler.setFormatter(formatter)
+        logger = logging.getLogger()
+        if log_level == "DEBUG":
+            logger.setLevel(logging.DEBUG)
+        elif log_level == "INFO":
+            logger.setLevel(logging.INFO)
+        elif log_level == "WARNING":
+            logger.setLevel(logging.WARNING)
+        elif log_level == "ERROR":
+            logger.setLevel(logging.ERROR)
+        elif log_level == "CRITICAL":
+            logger.setLevel(logging.CRITICAL)
+        else:
+            print "wrong loglevel parameter: %s" % log_level
+            exit(1)
+        logger.addHandler(handler)
+
+    def __repr__(self):
+        status = [self.__class__.__module__ + "." + self.__class__.__name__]
+        if self.__serving:
+            status.append('active')
+        else:
+            status.append('inactive')
+        status.append('%s:%s' % self.server.socket.getsockname()[:2])
+        return '<%s at %#x>' % (' '.join(status), id(self))
+
+    def start(self, timeout = 0.1):
+        """
+        Start serving until an explicit stop() request.
+        Polls for shutdown every 'timeout' seconds.
+        """
+        if self.__serving:
+            raise RuntimeError("ossftp server already started!")
+        if self.__stopped:
+            # ensure the server can be started again
+            FTPd.__init__(self, self.server.socket.getsockname(), self.handler)
+        self.__timeout = timeout
+        threading.Thread.start(self)
+        self.__flag.wait()
+
+    def run(self):
+        self.__serving = True
+        self.__flag.set()
+        while self.__serving:
+            self.__lock.acquire()
+            self.server.serve_forever(timeout=self.__timeout, blocking=False)
+            self.__lock.release()
+        self.server.close_all()
+
+    def stop(self):
+        """
+        Stop serving (also disconnecting all currently connected
+        clients) by telling the serve_forever() loop to stop and
+        waits until it does.
+        """
+        if not self.__serving:
+            raise RuntimeError("ossftp server not started yet!")
+        self.__serving = False
+        self.__stopped = True
+        self.join()
+
