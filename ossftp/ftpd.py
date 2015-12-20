@@ -71,12 +71,13 @@ class FTPd(threading.Thread):
         self.__set_logger(log_level)
 
         authorizer = OssAuthorizer()
-        for url in bucket_endpoints.strip().split(','):
-            if len(url.split('.', 1)) != 2:
-                print "url:%s format error." % (url)
-                continue
-            bucket_name, endpoint = url.split('.', 1)
-            authorizer.bucket_endpoints[bucket_name] = endpoint
+        if bucket_endpoints != "":
+            for url in bucket_endpoints.strip().split(','):
+                if len(url.split('.', 1)) != 2:
+                    print "url:%s format error." % (url)
+                    continue
+                bucket_name, endpoint = url.split('.', 1)
+                authorizer.bucket_endpoints[bucket_name] = endpoint
         authorizer.internal = internal
         self.handler.authorizer = authorizer
         self.handler.permit_foreign_addresses = True
