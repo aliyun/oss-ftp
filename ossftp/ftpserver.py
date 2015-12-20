@@ -40,7 +40,7 @@ def set_logger(level):
     logger.setLevel(level)
     logger.addHandler(handler)
 
-def start_ftp(masquerade_address, port, log_level, default_endpoint, internal):
+def start_ftp(masquerade_address, port, log_level, bucket_endpoints, internal):
 
     if log_level == "DEBUG":
         level = logging.DEBUG
@@ -57,9 +57,12 @@ def start_ftp(masquerade_address, port, log_level, default_endpoint, internal):
         exit(1)
 
     authorizer = OssAuthorizer()
-    if default_endpoint.strip():
-        authorizer.default_endpoint = default_endpoint
-        authorizer.use_default_endpoint = True
+    for url in bucket_endpoints.strip().split(','):
+        if len(url.split('.', 1)) != 2:
+            print "url:%s format error." % (url)
+            continue
+        bucket_name, endpoint = url.split('.', 1)
+        authorizer.bucket_endpoints[bucket_name] = endpoint
     authorizer.internal = internal
     handler = FTPHandler
     handler.permit_foreign_addresses = True
@@ -77,7 +80,7 @@ def main(args, opts):
     masquerade_address = ""
     port = 21
     log_level = "DEBUG"
-    default_endpoint = ""
+    bucket_endpoints = ""
     internal = None
     if opts.masquerade_address:
         masquerade_address = opts.masquerade_address
@@ -91,19 +94,19 @@ def main(args, opts):
     if opts.loglevel:
         log_level = opts.loglevel
     
-    if opts.default_endpoint:
-        default_endpoint = opts.default_endpoint
+    if opts.bucket_endpoints:
+        bucket_endpoints = opts.bucket_endpoints
 
     if opts.internal:
         internal = opts.internal
-    start_ftp(masquerade_address, port, log_level, default_endpoint, internal)
+    start_ftp(masquerade_address, port, log_level, bucket_endpoints, internal)
     
 if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option("", "--masquerade_address", dest="masquerade_address", help="the ip that will reply to FTP Client, then client will send data request to this address.")
     parser.add_option("", "--port", dest="port", help="the local port which ftpserver will listen")
     parser.add_option("", "--loglevel", dest="loglevel", help="DEBUG/INFO/")
-    parser.add_option("", "--default_endpoint", dest="default_endpoint", help="use this endpoint to access oss")
+    parser.add_option("", "--bucket_endpoints", dest="bucket_endpoints", help="use this endpoint to access oss")
     parser.add_option("", "--internal", dest="internal", help="access oss from internal domain or not")
     (opts, args) = parser.parse_args()
     main(args, opts)
