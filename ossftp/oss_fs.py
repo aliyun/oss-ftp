@@ -58,7 +58,15 @@ class OssFS(AbstractedFS):
     def remove(self, path):
         assert isinstance(path, unicode), path
         self.oss_fs_impl.remove(path)
-        
+    
+    def lexists(self, path):
+        assert isinstance(path, unicode), path
+        return self.oss_fs_impl.lexists(path)
+
+    def realpath(self, path):
+        assert isinstance(path, unicode), path
+        return path
+
     def rename(self, src, dst):
         assert isinstance(src, unicode), src
         assert isinstance(dst, unicode), dst
