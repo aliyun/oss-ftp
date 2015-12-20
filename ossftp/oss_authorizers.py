@@ -27,8 +27,8 @@ class BucketLoginInfo():
 class OssAuthorizer(DummyAuthorizer):
     read_perms = u"elr"
     write_perms = u"adfmwM"
-    default_location = u"oss-cn-hangzhou"
     default_endpoint = u"oss-cn-hangzhou.aliyuncs.com"
+    use_default_endpoint = False
     internal = None
     LOCAL_CHECK_OK = 0
     LOCAL_CHECK_FAIL = 1
@@ -97,6 +97,13 @@ class OssAuthorizer(DummyAuthorizer):
         return internal_endpoint
 
     def oss_check(self, bucket_name, default_endpoint, access_key_id, access_key_secret):
+        if self.use_default_endpoint:
+            try:
+                bucket = oss2.Bucket(oss2.Auth(access_key_id, access_key_secret), default_endpoint, bucket_name, connect_timeout=5.0, app_name=defaults.app_name)
+                res = bucket.get_bucket_acl()
+            except oss2.exceptions.OssError as e:
+                raise AuthenticationFailed("use default endpoint:%s failed. request_id:%s, status:%s, code:%s" % (default_endpoint, e.request_id, unicode(e.status), e.code))
+            return default_endpoint
         try:
             service = oss2.Service(oss2.Auth(access_key_id, access_key_secret), default_endpoint, app_name=defaults.app_name)
             res = service.list_buckets(prefix=bucket_name)
@@ -107,7 +114,7 @@ class OssAuthorizer(DummyAuthorizer):
                     return endpoint
             raise AuthenticationFailed("can't find the bucket %s when list buckets." % bucket_name) 
         except oss2.exceptions.OssError as e:
-            raise AuthenticationFailed("get bucket %s endpoint error, request_id: %s, status: %s, code: %s" % (bucket_name, e.request_id, e.status, e.code))
+            raise AuthenticationFailed("get bucket %s endpoint error, request_id: %s, status: %s, code: %s" % (bucket_name, e.request_id, unicode(e.status), e.code))
 
     def local_check(self, bucket_name, access_key_id, access_key_secret):
         bucket_info = self.get_bucket_info(bucket_name)
