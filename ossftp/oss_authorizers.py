@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
-import os
+import os, sys
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
+lib = os.path.abspath( os.path.join(python_path, 'lib'))
+if lib not in sys.path:
+    sys.path.append(lib)
+
+
 import logging
 
 from pyftpdlib.authorizers import DummyAuthorizer
@@ -9,6 +17,7 @@ import time
 
 import oss2
 import defaults
+
 class OssAuthorizer(DummyAuthorizer):
     read_perms = u"elr"
     write_perms = u"adfmwM"

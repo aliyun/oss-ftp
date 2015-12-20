@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
+import os, sys
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+if __name__ == "__main__":
+    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
+    lib = os.path.abspath( os.path.join(python_path, 'lib'))
+    sys.path.append(lib)
+
 import logging
 import threading
 from logging.handlers import RotatingFileHandler
-import os
 import errno
 from optparse import OptionParser
 from pyftpdlib.handlers import FTPHandler
@@ -73,8 +80,8 @@ class FTPd(threading.Thread):
         self.handler.banner = 'oss ftpd ready.'
         # lower buffer sizes = more "loops" while transfering data
         # = less false positives
-        self.handler.dtp_handler.ac_in_buffer_size = 4096
-        self.handler.dtp_handler.ac_out_buffer_size = 4096
+        #self.handler.dtp_handler.ac_in_buffer_size = 4096
+        #self.handler.dtp_handler.ac_out_buffer_size = 4096
         address = ('0.0.0.0', port)
         self.server = self.server_class(address, self.handler)
 

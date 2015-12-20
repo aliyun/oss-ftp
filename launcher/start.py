@@ -9,8 +9,10 @@ import launcher_log
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
-if root_path not in sys.path:
-    sys.path.append(root_path)
+python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
+sys.path.append(root_path)
+sys.path.append(python_path)
+
 from ossftp.ftpd import FTPd
 
 has_desktop = True
