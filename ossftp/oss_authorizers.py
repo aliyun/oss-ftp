@@ -111,13 +111,16 @@ class OssAuthorizer(DummyAuthorizer):
                 bucket = oss2.Bucket(oss2.Auth(access_key_id, access_key_secret), endpoint, bucket_name, connect_timeout=5.0, app_name=defaults.app_name)
                 res = bucket.get_bucket_acl()
             except oss2.exceptions.OssError as e:
-                raise AuthenticationFailed("access bucket:%s using specified endpoint:%s failed. request_id:%s, status:%s, code:%s" % (bucket_name, endpoint, e.request_id, unicode(e.status), e.code))
+                raise AuthenticationFailed("access bucket:%s using specified \
+                        endpoint:%s failed. request_id:%s, status:%s, code:%s, message:%s" % (bucket_name, endpoint, e.request_id, unicode(e.status), e.code, e.message))
             return endpoint 
         try:
             service = oss2.Service(oss2.Auth(access_key_id, access_key_secret), default_endpoint, app_name=defaults.app_name)
             res = service.list_buckets(prefix=bucket_name)
+        except oss2.exceptions.AccessDenied as e:
+            raise AuthenticationFailed("can't list buckets, check your access_key.request_id:%s, status:%s, code:%s, message:%s"% (e.request_id, unicode(e.status), e.code, e.message))
         except oss2.exceptions.OssError as e:
-            raise AuthenticationFailed("can't list buckets, check your access_key.request_id:%s, status:%s, code:%s"% (e.request_id, unicode(e.status), e.code))
+            raise AuthenticationFailed("list buckets error. request_id:%s, status:%s, code:%s, message:%s" % (e.request_id, unicode(e.status), e.code, e.message))
 
         bucket_list = res.buckets
         for bucket in bucket_list:
