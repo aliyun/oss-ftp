@@ -25,18 +25,18 @@ def retry(fn):
     def wrapper(*args, **kwargs):
         oss_file_op_intance = args[0]
         retry = defaults.max_send_retry_times
-        status, code, request_id = None, "", ""
+        status, code, message, request_id = None, "", "", ""
         while retry > 0:
             retry -= 1
             try:
                 return fn(*args, **kwargs)
             except OssError as e:
-                status, code, request_id = e.status, e.code, e.request_id
-        raise FilesystemError("%s failed. bucket:%s, key:%s, \
-            request_id:%s, code:%s, status:%s" % (fn.__name__, oss_file_op_intance.bucket.bucket_name,
-            oss_file_op_intance.key, request_id, code, status))
+                status, code, message, request_id = e.status, e.code, e.message, e.request_id
+        raise FilesystemError("%s failed. bucket:%s, key:%s,\
+            request_id:%s, code:%s, status:%s, message:%s" % (fn.__name__,
+            oss_file_op_intance.bucket.bucket_name, oss_file_op_intance.key,
+            request_id, code, status, message))
     return wrapper
-
 
 class OssFileOperation:
     
