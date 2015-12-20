@@ -144,9 +144,8 @@ class OssFileOperation:
         value = self.cache_get(self.dir_cache, (self.bucket.bucket_name, self.key))
         if value is not None:
             return value
-        self.key = self.key.rstrip('/') + '/'
-        _is_dir = self.object_exists()
-        self.key = self.key.rstrip('/')
+        contents = self.listdir()
+        _is_dir = not  (len(contents) == 0)
         self.cache_set(self.dir_cache, (self.bucket.bucket_name, self.key), _is_dir)
         return _is_dir
     
