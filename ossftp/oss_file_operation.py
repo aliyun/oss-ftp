@@ -68,14 +68,12 @@ class OssFileOperation:
     def get_upload_id(self):
         if self.upload_id is not None:
             return self.upload_id
-        return self.init_multi_upload()
+        else:
+            return self.init_multi_upload()
     
     @retry
     def upload_part(self):
-        res = self.bucket.upload_part(self.key, self.upload_id, self.part_num, self.buf)
-        self.buf = ''
-        self.part_list.append(oss2.models.PartInfo(self.part_num, res.etag))
-        return
+        return self.bucket.upload_part(self.key, self.upload_id, self.part_num, self.buf)
 
     def send_buf(self):
         upload_id = self.get_upload_id()
@@ -83,7 +81,9 @@ class OssFileOperation:
         if not self.buf:
             return
         self.part_num += 1
-        return self.upload_part()
+        res = self.upload_part()
+        self.buf = ''
+        self.part_list.append(oss2.models.PartInfo(self.part_num, res.etag))
        
     def write(self, data):
         while len(data) + len(self.buf) > self.buflimit:
@@ -96,25 +96,21 @@ class OssFileOperation:
     @retry  
     def put_object(self, buf):
         self.bucket.put_object(self.key, buf)
-        return
 
     @retry
     def complete_multipart_upload(self):
         self.bucket.complete_multipart_upload(self.key, self.upload_id, self.part_list)
-        return
 
     def close(self):
         assert self.closed == False
         if self.upload_id is not None:
-            return self.put_object(self.buf)
-
-        self.send_buf()
-        self.complete_multipart_upload()
+            self.put_object(self.buf)
+        else:
+            self.send_buf()
+            self.complete_multipart_upload()
         self.closed = True
     
     def listdir(self):
-        if self.contents:
-            return self.contents
         key = self.key
         if key != '':
             key = key.rstrip('/') + '/'
@@ -136,23 +132,31 @@ class OssFileOperation:
             to_add = entry.decode('utf-8')[len(key):]
             self.contents.append((to_add, -1, 0))
         return self.contents
-        
+
+    @retry
+    def object_exists(self):
+        return self.bucket.object_exists(self.key)
+
     def isfile(self):
-        return not self.isdir()
+        return self.object_exists()
 
     def isdir(self):
         value = self.cache_get(self.dir_cache, (self.bucket.bucket_name, self.key))
         if value is not None:
             return value
-        contents = self.listdir()
-        _is_dir = not (len(contents) == 0)
+        self.key = self.key.rstrip('/') + '/'
+        _is_dir = self.object_exists()
+        self.key = self.key.rstrip('/')
         self.cache_set(self.dir_cache, (self.bucket.bucket_name, self.key), _is_dir)
         return _is_dir
     
     def cache_get(self, cache, key):
-        if cache.has_key(key) and cache[key][1] + self.expire_time >= time.time():
+        if not cache.has_key(key):
+            return None
+        if cache[key][1] + self.expire_time >= time.time():
             return cache[key][0]
         else:
+            self.cache_delete(cache, key)
             return None
     
     def cache_set(self, cache, key, value):
@@ -165,14 +169,15 @@ class OssFileOperation:
     def head_object(self):
         resp = self.bucket.head_object(self.key)
         content_length = resp.content_length
-        self.cache_set(self.size_cache, (self.bucket.bucket_name, self.key), content_length)
         return content_length
 
     def getsize(self):
         value = self.cache_get(self.size_cache, (self.bucket.bucket_name, self.key))
         if value != None:
             return value
-        return self.head_object()
+        content_length = self.head_object()
+        self.cache_set(self.size_cache, (self.bucket.bucket_name, self.key), content_length)
+        return content_length
  
     @retry
     def get_object(self):
@@ -200,4 +205,4 @@ class OssFileOperation:
 
     def remove(self):
         self.delete_object()
-        self.cache_delete(self.size_cache, self.key)
+        self.cache_delete(self.size_cache, (self.bucket.bucket_name, self.key))
