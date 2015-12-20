@@ -116,8 +116,8 @@ class OssFileOperation:
         if self.contents:
             return self.contents
         key = self.key
-        if key != '' and not key.endswith('/'):
-            key = key + '/'
+        if key != '':
+            key = key.rstrip('/') + '/'
         self.key_list = []
         self.dir_list = []
         for i, key_info in enumerate(oss2.iterators.ObjectIterator(self.bucket, prefix=key, delimiter='/')):
@@ -183,18 +183,19 @@ class OssFileOperation:
         return self.get_object()
        
     def mkdir(self):
-        self.key = self.key.rstrip('/')
-        self.key = self.key + '/'
+        self.key = self.key.rstrip('/') + '/'
         self.put_object('')
+        self.key = self.key.rstrip('/')
+        self.cache_set(self.dir_cache, (self.bucket.bucket_name, self.key), True)
 
     @retry
     def delete_object(self):
         self.bucket.delete_object(self.key)
 
     def rmdir(self):
-        self.key = self.key.rstrip('/')
-        self.key = self.key + '/'
+        self.key = self.key.rstrip('/') + '/'
         self.delete_object()
+        self.key = self.key.rstrip('/')
         self.cache_set(self.dir_cache, (self.bucket.bucket_name, self.key), False)
 
     def remove(self):
