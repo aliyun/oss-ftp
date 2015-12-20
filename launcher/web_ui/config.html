@@ -13,14 +13,14 @@
 			</div> <!-- .span8 -->
 		</div> <!-- .row-fluid -->
 		<div class="row-fluid">
-			<div class="span4">显示托盘图标（需要重启ossftp）</div> <!-- .span4 -->
+			<div class="span4">显示托盘图标</div> <!-- .span4 -->
 			<div class="span8">
 				<input id="show-systray" type="checkbox" data-toggle="switch" />
 			</div> <!-- .span8 -->
 		</div> <!-- .row-fluid -->
         <div class="row-fluid">
 			<div class="span4">
-				<label for="ossftp-port">ossftp 监听端口（需要重启ossftp）</label>
+				<label for="ossftp-port">ossftp 监听端口（重启生效）</label>
 			</div> <!-- .span4 -->
 			<div class="span8">
 				<input id="ossftp-port" type="text" placeholder="默认监听21端口"/>
@@ -28,10 +28,18 @@
 		</div> <!-- .row-fluid -->
         <div class="row-fluid">
 			<div class="span4">
-				<label for="ossftp-loglevel">ossftp 日志等级（DEBUG/INFO/WARNING/ERROR/CRITICAL，需要重启ossftp）</label>
+				<label for="ossftp-loglevel">ossftp 日志等级（DEBUG，INFO，WARNING，ERROR，CRITICAL。重启生效）</label>
 			</div> <!-- .span4 -->
 			<div class="span8">
-				<input id="ossftp-loglevel" type="text" placeholder="默认等级为info"/>
+				<input id="ossftp-loglevel" type="text" placeholder="默认等级为INFO"/>
+			</div> <!-- .span8 -->
+		</div> <!-- .row-fluid -->
+        <div class="row-fluid">
+			<div class="span4">
+				<label for="ossftp-bucketendpoints">Bucket endpoints（大部分情况无需设置，如何设置请参考wiki。重启生效）</label>
+			</div> <!-- .span4 -->
+			<div class="span8">
+				<input id="ossftp-bucketendpoints" type="text" placeholder="示例：bucket-a.oss-cn-hangzhou.aliyuncs.com, bucket-b.oss-cn-qingdao.aliyuncs.com"/>
 			</div> <!-- .span8 -->
 		</div> <!-- .row-fluid -->
 	</div> <!-- #options -->
@@ -102,6 +110,9 @@
                 if ( result['ossftp_loglevel'] != '') {
                     $( '#ossftp-loglevel').val(result['ossftp_loglevel'])
                 }
+                if ( result['ossftp_bucketendpoints'] != '') {
+                    $( '#ossftp-bucketendpoints').val(result['ossftp_bucketendpoints'])
+                }
             },
             error: function() {
                 displayErrorMessage();
@@ -150,7 +161,8 @@
             'popup_webui':$('#popup-webui').is(':checked') ? 1:0,
             'show_systray':$('#show-systray').is(':checked') ? 1:0,
             'ossftp_port':$('#ossftp-port').val(),
-            'ossftp_loglevel':$('#ossftp-loglevel').val()
+            'ossftp_loglevel':$('#ossftp-loglevel').val(),
+            'ossftp_bucketendpoints':$('#ossftp-bucketendpoints').val()
         };
         $.ajax({
             type: 'GET',

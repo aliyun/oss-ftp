@@ -246,12 +246,13 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if reqs['cmd'] == ['get_config']:
             config.load()
-            data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d, "ossftp_port": %d, "ossftp_loglevel": "%s" }' %\
+            data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d, "ossftp_port": %d, "ossftp_loglevel": "%s", "ossftp_bucketendpoints": "%s" }' %\
                    (config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
                     , config.get(["modules", "ossftp", "port"], 21)
-                    , config.get(["modules", "ossftp", "log_level"], 'INFO'))
+                    , config.get(["modules", "ossftp", "log_level"], 'INFO')
+                    , config.get(["modules", "ossftp", "bucket_endpoints"], ''))
         elif reqs['cmd'] == ['set_config']:
             success = True
             popup_webui = config.get(["modules", "launcher", "popup_webui"], 1)
@@ -259,6 +260,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             show_systray = config.get(["modules", "launcher", "show_systray"], 1)
             ossftp_port = config.get(["modules", "ossftp", "port"], 21)
             ossftp_loglevel = config.get(["modules", "ossftp", "log_level"], 'INFO')
+            ossftp_bucketendpoints = config.get(["modules", "ossftp", "bucket_endpoints"], '')
             data = '{"res":"fail"}'
             if success and 'popup_webui' in reqs :
                 popup_webui = int(reqs['popup_webui'][0])
@@ -285,6 +287,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if (ossftp_loglevel not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']):
                     success = False
                     data = '{"res":"fail, illegal ossftp log level: %s. Must be: DEBUG, INFO, WARNING, ERROR, CRITICAL"}' % ossftp_loglevel
+            if success and 'ossftp_bucketendpoints' in reqs:
+                ossftp_bucketendpoints = reqs['ossftp_bucketendpoints'][0].strip()
                 
             if success:
                 config.set(["modules", "launcher", "popup_webui"], popup_webui)
@@ -292,6 +296,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 config.set(["modules", "launcher", "auto_start"], auto_start)
                 config.set(["modules", "ossftp", "port"], ossftp_port)
                 config.set(["modules", "ossftp", "log_level"], ossftp_loglevel)
+                config.set(["modules", "ossftp", "bucket_endpoints"], ossftp_bucketendpoints)
                 config.save()
                 if auto_start:
                     autorun.enable()

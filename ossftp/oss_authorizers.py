@@ -35,9 +35,7 @@ class BucketLoginInfo():
 class OssAuthorizer(DummyAuthorizer):
     read_perms = u"elr"
     write_perms = u"adfmwM"
-    default_location = u"oss-cn-hangzhou"
     default_endpoint = u"oss-cn-hangzhou.aliyuncs.com"
-    internal = None
     LOCAL_CHECK_OK = 0
     LOCAL_CHECK_FAIL = 1
     LOCAL_CHECK_UNCERTAIN = 2
@@ -45,6 +43,8 @@ class OssAuthorizer(DummyAuthorizer):
     def __init__(self):
         self.bucket_info_table = {}
         self.expire_time_interval = 60
+        self.internal = None
+        self.bucket_endpoints = {}
 
     def parse_username(self, username):
         if len(username) == 0:
@@ -105,17 +105,26 @@ class OssAuthorizer(DummyAuthorizer):
         return internal_endpoint
 
     def oss_check(self, bucket_name, default_endpoint, access_key_id, access_key_secret):
+        if bucket_name in self.bucket_endpoints:
+            endpoint = self.bucket_endpoints[bucket_name]
+            try:
+                bucket = oss2.Bucket(oss2.Auth(access_key_id, access_key_secret), endpoint, bucket_name, connect_timeout=5.0, app_name=defaults.app_name)
+                res = bucket.get_bucket_acl()
+            except oss2.exceptions.OssError as e:
+                raise AuthenticationFailed("access bucket:%s using specified endpoint:%s failed. request_id:%s, status:%s, code:%s" % (bucket_name, endpoint, e.request_id, unicode(e.status), e.code))
+            return endpoint 
         try:
             service = oss2.Service(oss2.Auth(access_key_id, access_key_secret), default_endpoint, app_name=defaults.app_name)
             res = service.list_buckets(prefix=bucket_name)
-            bucket_list = res.buckets
-            for bucket in bucket_list:
-                if bucket.name == bucket_name:
-                    endpoint = self.get_endpoint(bucket_name, bucket.location.decode('utf-8'), access_key_id, access_key_secret)
-                    return endpoint
-            raise AuthenticationFailed("can't find the bucket %s when list buckets." % bucket_name) 
         except oss2.exceptions.OssError as e:
-            raise AuthenticationFailed("get bucket %s endpoint error, request_id: %s, status: %s, code: %s" % (bucket_name, e.request_id, e.status, e.code))
+            raise AuthenticationFailed("can't list buckets, check your access_key.request_id:%s, status:%s, code:%s"% (e.request_id, unicode(e.status), e.code))
+
+        bucket_list = res.buckets
+        for bucket in bucket_list:
+            if bucket.name == bucket_name:
+                endpoint = self.get_endpoint(bucket_name, bucket.location.decode('utf-8'), access_key_id, access_key_secret)
+                return endpoint
+        raise AuthenticationFailed("can't find the bucket %s when list buckets." % bucket_name) 
 
     def local_check(self, bucket_name, access_key_id, access_key_secret):
         bucket_info = self.get_bucket_info(bucket_name)

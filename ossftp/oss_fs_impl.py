@@ -157,3 +157,5 @@ class OssFsImpl:
         if self.is_root(path):
             return True
         return self.get_file_operation_instance(path).isdir()
+    def lexists(self, path):
+        return self.isfile(path) or self.isdir(path)
