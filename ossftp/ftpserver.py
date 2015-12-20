@@ -57,12 +57,13 @@ def start_ftp(masquerade_address, port, log_level, bucket_endpoints, internal):
         exit(1)
 
     authorizer = OssAuthorizer()
-    for url in bucket_endpoints.strip().split(','):
-        if len(url.split('.', 1)) != 2:
-            print "url:%s format error." % (url)
-            continue
-        bucket_name, endpoint = url.split('.', 1)
-        authorizer.bucket_endpoints[bucket_name] = endpoint
+    if bucket_endpoints != "":
+        for url in bucket_endpoints.strip().split(','):
+            if len(url.split('.', 1)) != 2:
+                print "url:%s format error." % (url)
+                continue
+            bucket_name, endpoint = url.split('.', 1)
+            authorizer.bucket_endpoints[bucket_name] = endpoint
     authorizer.internal = internal
     handler = FTPHandler
     handler.permit_foreign_addresses = True
