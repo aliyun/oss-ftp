@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+from pyftpdlib.filesystems import FilesystemError
 import oss2
+
 import oss_file_operation
 import defaults
-from pyftpdlib.filesystems import FilesystemError
 
 class OssFsImpl:
 
@@ -16,18 +17,18 @@ class OssFsImpl:
         self.size_cache = {}
         self.dir_cache = {}
 
-    def isBucket(self, path):
+    def is_bucket(self, path):
         phyPath = path.rstrip('/')
         index = phyPath.rfind('/')
-        if index == 0 and not self.isRoot(path):
+        if index == 0 and not self.is_root(path):
             return True
         return False
     
-    def isRoot(self, path):
+    def is_root(self, path):
         return path == '/'
 
-    def getOSSBucketName(self, path):
-        if self.isRoot(path):
+    def get_oss_bucket_name(self, path):
+        if self.is_root(path):
             return u'/'
         phyPath = path.rstrip('/')
         index = phyPath.find('/', 1)
@@ -36,15 +37,15 @@ class OssFsImpl:
         else:
             return phyPath[1:index]
         
-    def getFileName(self, path):
-        if self.isBucket(path):
+    def get_file_name(self, path):
+        if self.is_bucket(path):
             return ""
         if path == '/':
             return u'/'
-        bucket = self.getOSSBucketName(path)
+        bucket = self.get_oss_bucket_name(path)
         return path[len(bucket)+2:]
     
-    def getParentPhysicalName(self, path):
+    def get_parent_physical_name(self, path):
         if path == '/':
             return u'/'
 
@@ -56,22 +57,22 @@ class OssFsImpl:
 
         return parentPath
 
-    def normalizeSeparateChar(self, path):
-        normalizedPathName = path.replace('\\', '/')
-        return normalizedPathName
+    def normalize_separate_char(self, path):
+        normalized_path_name = path.replace('\\', '/')
+        return normalized_path_name
     
-    def getPhysicalName(self, rootDir, curDir, fileName):
-        normalizedRootDir = self.normalizeSeparateChar(rootDir)
+    def get_physical_name(self, rootDir, curDir, fileName):
+        normalizedRootDir = self.normalize_separate_char(rootDir)
         if normalizedRootDir[-1] != '/':
             normalizedRootDir += '/'
-        normalizedFileName = self.normalizeSeparateChar(fileName)
+        normalized_file_name = self.normalize_separate_char(fileName)
         normalizedCurDir = curDir
-        if normalizedFileName[0] != '/':
+        if normalized_file_name[0] != '/':
             if normalizedCurDir == None:
                 normalizedCurDir = u'/'
             if normalizedCurDir == '':
                 normalizedCurDir = u'/'
-            normalizedCurDir = self.normalizeSeparateChar(normalizedCurDir)
+            normalizedCurDir = self.normalize_separate_char(normalizedCurDir)
             if normalizedCurDir[0] != '/':
                 normalizedCurDir = u'/' + normalizedCurDir
             if normalizedCurDir[-1] != '/':
@@ -82,7 +83,7 @@ class OssFsImpl:
 
         resArg = resArg.rstrip('/')
 
-        st = normalizedFileName.split('/')
+        st = normalized_file_name.split('/')
         for tok in st:
             if tok == '':
                 continue
@@ -106,14 +107,14 @@ class OssFsImpl:
         return resArg
    
     def get_bucket(self, path):
-        path = self.normalizeSeparateChar(path)
-        bucket_name = self.getOSSBucketName(path)
+        path = self.normalize_separate_char(path)
+        bucket_name = self.get_oss_bucket_name(path)
         bucket = oss2.Bucket(oss2.Auth(self.access_id, self.access_key), self.endpoint, bucket_name, app_name=defaults.app_name)
         return bucket
     
     def get_object(self, path):
-        path = self.normalizeSeparateChar(path)
-        object = self.getFileName(path)
+        path = self.normalize_separate_char(path)
+        object = self.get_file_name(path)
         return object
 
     def get_file_operation_instance(self, path):
@@ -142,6 +143,7 @@ class OssFsImpl:
     
     def getsize(self, path):
         return self.get_file_operation_instance(path).getsize()
+
     def getmodify(self, path):
         raise FilesystemError("method getmodify not implied")
     
@@ -149,9 +151,9 @@ class OssFsImpl:
         return self.get_file_operation_instance(path).isfile()
     
     def isdir(self, path):
-        path = self.normalizeSeparateChar(path)
-        if self.isBucket(path):
+        path = self.normalize_separate_char(path)
+        if self.is_bucket(path):
             return True
-        if self.isRoot(path):
+        if self.is_root(path):
             return True
         return self.get_file_operation_instance(path).isdir()

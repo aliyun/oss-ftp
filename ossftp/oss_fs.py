@@ -6,8 +6,8 @@ from pyftpdlib.filesystems import FilesystemError
 from pyftpdlib._compat import PY3, u, unicode
 _months_map = {1:'Jan', 2:'Feb', 3:'Mar', 4:'Apr', 5:'May', 6:'Jun', 7:'Jul',
                8:'Aug', 9:'Sep', 10:'Oct', 11:'Nov', 12:'Dec'}
-
 from pyftpdlib.filesystems import AbstractedFS
+
 import oss_fs_impl 
 
 class OssFS(AbstractedFS):
@@ -16,9 +16,10 @@ class OssFS(AbstractedFS):
         assert isinstance(root, unicode), root
         AbstractedFS.__init__(self, root, cmd_channel)
         bucket_name = root.strip('/')
-        bucket_info_dict = cmd_channel.authorizer.get_bucket_info(bucket_name)
-        access_id, access_key = bucket_info_dict["access_key_dict"].items()[0]
-        self.oss_fs_impl = oss_fs_impl.OssFsImpl(bucket_name, bucket_info_dict["endpoint"], access_id, access_key)
+        bucket_info = cmd_channel.authorizer.get_bucket_info(bucket_name)
+        access_key_id, access_key_secret= bucket_info.access_key.items()[0]
+        endpoint = bucket_info.endpoint
+        self.oss_fs_impl = oss_fs_impl.OssFsImpl(bucket_name, endpoint, access_key_id, access_key_secret)
     
     def open(self, filename, mode):
         assert isinstance(filename, unicode), filename
@@ -65,7 +66,7 @@ class OssFS(AbstractedFS):
         
     def chmod(self, path, mode):
         assert isinstance(path, unicode), path
-        #raise NotImplementedError
+        raise FilesystemError("method chmod is not implied") 
     
     def getsize(self, path):
         assert isinstance(path, unicode), path
@@ -131,7 +132,7 @@ class OssFS(AbstractedFS):
                 size = 0
             
             line = "%s %3s %-8s %-8s %8s %s %s\r\n" % (perms, nlinks, uname, gname,
-                                                       size, mtimestr, basename)
+                                                       size, mtimestr, basename.rstrip('/'))
             yield line.encode('utf8', self.cmd_channel.unicode_errors)
     
     def format_mlsx(self, basedir, listing, perms, facts, ingore_err=True):
@@ -185,5 +186,5 @@ class OssFS(AbstractedFS):
                 retfacts['modify'] = modify[:4] + modify[5:7] + modify[8:10] + modify[11:13] + modify[14:16] + modify[17:19]
             factstring = "".join(["%s=%s;" % (x, retfacts[x]) \
                                   for x in sorted(retfacts.keys())])
-            line = "%s %s\r\n" % (factstring, basename)
+            line = "%s %s\r\n" % (factstring, basename.rstrip('/'))
             yield line.encode('utf8', self.cmd_channel.unicode_errors) 
