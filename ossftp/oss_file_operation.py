@@ -103,7 +103,7 @@ class OssFileOperation:
 
     def close(self):
         assert self.closed == False
-        if self.upload_id is not None:
+        if self.upload_id is None:
             self.put_object(self.buf)
         else:
             self.send_buf()
