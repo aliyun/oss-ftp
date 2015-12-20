@@ -159,7 +159,7 @@ class OssFileOperation:
         cache[key] = (value, time.time())
 
     def cache_delete(self, cache, key):
-        cache.pop(key)
+        cache.pop(key, None)
 
     @retry
     def head_object(self):
