@@ -9,14 +9,15 @@ import launcher_log
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-sys.path.append(root_path)
-sys.path.append(python_path)
-
-from ossftp.ftpd import FTPd
+if root_path not in sys.path:
+    sys.path.append(root_path)
 
 has_desktop = True
 if sys.platform.startswith("linux"):
+    python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib"))
+    sys.path.append(python_lib_path)
+    from ossftp.ftpd import FTPd
+
     def X_is_running():
         try:
             from subprocess import Popen, PIPE
@@ -33,14 +34,14 @@ if sys.platform.startswith("linux"):
         has_desktop = False
 
 elif sys.platform == "win32":
-    win32_lib = os.path.join(python_path, 'lib', 'win32')
-    sys.path.append(win32_lib)
     from win_tray import sys_tray
+    from ossftp.ftpd import FTPd
 elif sys.platform == "darwin":
-    darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
-    sys.path.append(darwin_lib)
+    python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib"))
+    sys.path.append(python_lib_path)
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjc"
     sys.path.append(extra_lib)
+    from ossftp.ftpd import FTPd
 
     try:
         import mac_tray as sys_tray

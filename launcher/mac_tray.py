@@ -8,11 +8,6 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 
 
 if __name__ == "__main__":
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
-    sys.path.append(noarch_lib)
-    osx_lib = os.path.join(python_path, 'lib', 'darwin')
-    sys.path.append(osx_lib)
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjC"
     sys.path.append(extra_lib)
 

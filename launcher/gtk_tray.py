@@ -11,13 +11,6 @@ import launcher_log
 
 import pygtk
 
-if __name__ == "__main__":
-    import os, sys
-    current_path = os.path.dirname(os.path.abspath(__file__))
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
-    sys.path.append(noarch_lib)
-
 pygtk.require('2.0')
 import gtk
 gtk.gdk.threads_init()
