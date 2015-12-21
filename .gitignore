@@ -1,5 +1,5 @@
 #python
-*.py[cod]
+*.py[co]
 *.so
 *.egg
 *.egg-info

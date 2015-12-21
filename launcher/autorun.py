@@ -49,7 +49,7 @@ if sys.platform == 'win32':
     if (os.path.isfile(ossftp_exe)):
         run_cmd = os.path.abspath(ossftp_exe)
     else:
-        run_cmd = "\"" + os.path.abspath( os.path.join(root_path, "python27", "1.0", "pythonw.exe")) + "\" \"" +\
+        run_cmd = "\"" + os.path.abspath( os.path.join(root_path, "python27", "win32", "pythonw.exe")) + "\" \"" +\
                   os.path.abspath( os.path.join(root_path, "launcher", "start.py")) + "\""
 elif sys.platform == 'linux' or sys.platform == 'linux2':
     _xdg_config_home = os.environ.get("XDG_CONFIG_HOME", "~/.config")
