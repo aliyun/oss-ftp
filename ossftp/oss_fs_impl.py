@@ -45,67 +45,10 @@ class OssFsImpl:
         bucket = self.get_oss_bucket_name(path)
         return path[len(bucket)+2:]
     
-    def get_parent_physical_name(self, path):
-        if path == '/':
-            return u'/'
-
-        parentPath = path.rstrip('/')
-
-        index = parentPath.rfind('/')
-        if index != -1:
-            parentPath = parentPath[:index]
-
-        return parentPath
-
     def normalize_separate_char(self, path):
         normalized_path_name = path.replace('\\', '/')
         return normalized_path_name
     
-    def get_physical_name(self, rootDir, curDir, fileName):
-        normalizedRootDir = self.normalize_separate_char(rootDir)
-        if normalizedRootDir[-1] != '/':
-            normalizedRootDir += '/'
-        normalized_file_name = self.normalize_separate_char(fileName)
-        normalizedCurDir = curDir
-        if normalized_file_name[0] != '/':
-            if normalizedCurDir == None:
-                normalizedCurDir = u'/'
-            if normalizedCurDir == '':
-                normalizedCurDir = u'/'
-            normalizedCurDir = self.normalize_separate_char(normalizedCurDir)
-            if normalizedCurDir[0] != '/':
-                normalizedCurDir = u'/' + normalizedCurDir
-            if normalizedCurDir[-1] != '/':
-                normalizedCurDir = normalizedCurDir + '/'
-            resArg = normalizedRootDir + normalizedCurDir[1:]
-        else:
-            resArg = normalizedRootDir
-
-        resArg = resArg.rstrip('/')
-
-        st = normalized_file_name.split('/')
-        for tok in st:
-            if tok == '':
-                continue
-            if tok == '.':
-                continue
-            if tok == '..':
-                if resArg.startswith(normalizedRootDir):
-                    slashIndex = resArg.rfind('/')
-                    if slashIndex != -1:
-                        resArg = resArg[0:slashIndex]
-                continue
-            if tok == '~':
-                resArg = normalizedRootDir[:-1]
-                continue
-
-            resArg = resArg + '/' + tok
-
-        if len(resArg) + 1 == len(normalizedRootDir):
-            resArg = resArg + '/'
-
-        return resArg
-   
     def get_bucket(self, path):
         path = self.normalize_separate_char(path)
         bucket_name = self.get_oss_bucket_name(path)
