@@ -40,15 +40,16 @@ def start(module):
             is_internal = config.get(["modules", "ossftp", "internal"], None)
             log_level = config.get(["modules", "ossftp", "log_level"], "INFO")
             bucket_endpoints = config.get(["modules", "ossftp", "bucket_endpoints"], "")
-            #script_path = os.path.join(root_path, 'ossftp', 'ftpserver.py')
-            #if not os.path.isfile(script_path):
-                #launcher_log.critical("start module script not exist:%s", script_path)
-                #return "fail"
-            #cmd = [sys.executable, script_path, "--port=%d"%port, "--loglevel=%s"%log_level]
-            #proc_handler[module]["proc"] = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            t = FTPd(masquerade_address, port, bucket_endpoints, is_internal, log_level)
-            t.start()
-            proc_handler[module]["proc"] = t
+            script_path = os.path.join(root_path, 'ossftp', 'ftpserver.py')
+            if not os.path.isfile(script_path):
+                launcher_log.critical("start module script not exist:%s", script_path)
+                return "fail"
+            cmd = [sys.executable, script_path, "--port=%d"%port, "--loglevel=%s"%log_level, "--bucket_endpoints=%s"%bucket_endpoints]
+            print cmd
+            proc_handler[module]["proc"] = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            #t = FTPd(masquerade_address, port, bucket_endpoints, is_internal, log_level)
+            #t.start()
+            #proc_handler[module]["proc"] = t
         else:
             raise ValueError("Wrong module: %s" % module)
         
@@ -65,9 +66,9 @@ def stop(module):
             launcher_log.error("module %s not running", module)
             return
         
-        #proc_handler[module]["proc"].terminate()  # Sends SIGTERM
-        #proc_handler[module]["proc"].wait()
-        proc_handler[module]["proc"].stop()
+        proc_handler[module]["proc"].terminate()  # Sends SIGTERM
+        proc_handler[module]["proc"].wait()
+        #proc_handler[module]["proc"].stop()
 
         del proc_handler[module]
 
