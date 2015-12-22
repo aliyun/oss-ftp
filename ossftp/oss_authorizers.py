@@ -22,7 +22,7 @@ class BucketLoginInfo():
         self.expire_time = time.time() + 60
 
     def expired(self):
-        return self.expire_time > time.time()
+        return self.expire_time < time.time()
 
 class OssAuthorizer(DummyAuthorizer):
     read_perms = u"elr"
