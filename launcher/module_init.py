@@ -36,7 +36,7 @@ def start(module):
 
         if module == 'ossftp':
             masquerade_address = config.get(["modules", "ossftp", "masquerade_address"], "")
-            port = config.get(["modules", "ossftp", "port"], 21)
+            port = config.get(["modules", "ossftp", "port"], 2048)
             is_internal = config.get(["modules", "ossftp", "internal"], None)
             log_level = config.get(["modules", "ossftp", "log_level"], "INFO")
             bucket_endpoints = config.get(["modules", "ossftp", "bucket_endpoints"], "")

@@ -252,7 +252,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             popup_webui = config.get(["modules", "launcher", "popup_webui"], 1)
             auto_start = config.get(["modules", "launcher", "auto_start"], 0)
             show_systray = config.get(["modules", "launcher", "show_systray"], 1)
-            ossftp_port = config.get(["modules", "ossftp", "port"], 21)
+            ossftp_port = config.get(["modules", "ossftp", "port"], 2048)
             ossftp_loglevel = config.get(["modules", "ossftp", "log_level"], 'INFO')
             ossftp_bucketendpoints = config.get(["modules", "ossftp", "bucket_endpoints"], '')
             data = '{"res":"fail"}'

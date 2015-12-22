@@ -63,7 +63,7 @@ def recheck_module_path():
 
     if get(["modules", "ossftp", "port"], -1) == -1:
         need_save_config = True
-        set(["modules", "ossftp", "port"], 21)
+        set(["modules", "ossftp", "port"], 2048)
 
     if get(["modules", "launcher", "control_port"], 0) == 0:
         need_save_config = True
