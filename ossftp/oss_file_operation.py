@@ -169,6 +169,12 @@ class OssFileOperation:
         resp = self.bucket.head_object(self.key)
         content_length = resp.content_length
         return content_length
+   
+    @retry
+    def getmtime(self):
+        resp = self.bucket.head_object(self.key)
+        mtime = resp.last_modified
+        return mtime
 
     def getsize(self):
         value = self.cache_get(self.size_cache, (self.bucket.bucket_name, self.key))

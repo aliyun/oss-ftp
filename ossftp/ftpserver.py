@@ -95,7 +95,7 @@ def start_ftp(masquerade_address, port, log_level, bucket_endpoints, internal):
 
 def main(args, opts):
     masquerade_address = ""
-    port = 21
+    port = 2048 
     log_level = "DEBUG"
     bucket_endpoints = ""
     internal = None
@@ -105,7 +105,7 @@ def main(args, opts):
         try:
             port = int(opts.port)
         except ValueError:
-            print "invalid FTP port, please input a valid port like --port=21"
+            print "invalid FTP port, please input a valid port like --port=2048"
             exit(1)
 
     if opts.loglevel:

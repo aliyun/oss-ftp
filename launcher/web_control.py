@@ -244,7 +244,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                    (config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
-                    , config.get(["modules", "ossftp", "port"], 21)
+                    , config.get(["modules", "ossftp", "port"], 2048)
                     , config.get(["modules", "ossftp", "log_level"], 'INFO')
                     , config.get(["modules", "ossftp", "bucket_endpoints"], ''))
         elif reqs['cmd'] == ['set_config']:

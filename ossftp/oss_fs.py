@@ -81,9 +81,9 @@ class OssFS(AbstractedFS):
         assert isinstance(path, unicode), path
         return self.oss_fs_impl.getsize(path)
     
-    def getmodify(self, path):
+    def getmtime(self, path):
         assert isinstance(path, unicode), path
-        return self.oss_fs_impl.getmodify(path)
+        return self.oss_fs_impl.getmtime(path)
     
     def stat(self, path):
         return ""
