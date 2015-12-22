@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
-import os
+import os, sys
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
+lib = os.path.abspath( os.path.join(python_path, 'lib'))
+if lib not in sys.path:
+    sys.path.append(lib)
+
+
 import time
 import logging
 
