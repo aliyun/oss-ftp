@@ -11,7 +11,7 @@ from distutils.version import LooseVersion
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 data_path = os.path.join(root_path, 'data')
-config_path = os.path.join(data_path, 'launcher', 'config.json')
+config_path = os.path.join(root_path, 'config.json')
 
 config = {}
 def load():
@@ -60,6 +60,10 @@ def recheck_module_path():
     need_save_config = False
 
     modules = ["ossftp", "launcher"]
+
+    if get(["modules", "ossftp", "address"], -1) == -1:
+        need_save_config = True
+        set(["modules", "ossftp", "address"], "127.0.0.1")
 
     if get(["modules", "ossftp", "port"], -1) == -1:
         need_save_config = True

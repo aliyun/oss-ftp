@@ -61,7 +61,7 @@ class FTPd(threading.Thread):
             exit(1)
         logger.addHandler(handler)
 
-    def __init__(self, masquerade_address, port, bucket_endpoints, internal, log_level):
+    def __init__(self, masquerade_address, listen_address, port, bucket_endpoints, internal, log_level):
         threading.Thread.__init__(self)
         self.__serving = False
         self.__stopped = False
@@ -89,7 +89,7 @@ class FTPd(threading.Thread):
         # = less false positives
         self.handler.dtp_handler.ac_in_buffer_size = 4096
         self.handler.dtp_handler.ac_out_buffer_size = 4096
-        address = ('0.0.0.0', port)
+        address = (listen_address, port)
         self.server = self.server_class(address, self.handler)
 
     def __repr__(self):

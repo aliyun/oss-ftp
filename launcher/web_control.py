@@ -232,6 +232,13 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         data = (index_content.decode('utf-8') % (menu_content, right_content.decode('utf-8') )).encode('utf-8')
         self.send_response('text/html', data)
+    
+    def ip_check(self, ip_str):
+        pattern = r"\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
+        if re.match(pattern, ip_str):
+            return True
+        else:
+            return False
 
     def req_config_handler(self):
         req = urlparse.urlparse(self.path).query
@@ -240,10 +247,11 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if reqs['cmd'] == ['get_config']:
             config.load()
-            data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d, "ossftp_port": %d, "ossftp_loglevel": "%s", "ossftp_bucketendpoints": "%s" }' %\
+            data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d, "ossftp_address": "%s", "ossftp_port": %d, "ossftp_loglevel": "%s", "ossftp_bucketendpoints": "%s" }' %\
                    (config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
+                    , config.get(["modules", "ossftp", "address"], '127.0.0.1')
                     , config.get(["modules", "ossftp", "port"], 2048)
                     , config.get(["modules", "ossftp", "log_level"], 'INFO')
                     , config.get(["modules", "ossftp", "bucket_endpoints"], ''))
@@ -252,6 +260,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             popup_webui = config.get(["modules", "launcher", "popup_webui"], 1)
             auto_start = config.get(["modules", "launcher", "auto_start"], 0)
             show_systray = config.get(["modules", "launcher", "show_systray"], 1)
+            ossftp_address = config.get(["modules", "ossftp", "address"], "127.0.0.1")
             ossftp_port = config.get(["modules", "ossftp", "port"], 2048)
             ossftp_loglevel = config.get(["modules", "ossftp", "log_level"], 'INFO')
             ossftp_bucketendpoints = config.get(["modules", "ossftp", "bucket_endpoints"], '')
@@ -271,6 +280,12 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if auto_start != 0 and auto_start != 1:
                     success = False
                     data = '{"res":"fail, auto_start:%s"}' % auto_start
+            if success and 'ossftp_address' in reqs:
+                ossftp_address = reqs['ossftp_address'][0].strip()
+                if not self.ip_check(ossftp_address):
+                    success = False
+                    data = '{"res":"fail, ilegal ossftp address: %s"}' % ossftp_address
+ 
             if success and 'ossftp_port' in reqs:
                 ossftp_port = int(reqs['ossftp_port'][0])
                 if ossftp_port < 0:
@@ -288,6 +303,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 config.set(["modules", "launcher", "popup_webui"], popup_webui)
                 config.set(["modules", "launcher", "show_systray"], show_systray)
                 config.set(["modules", "launcher", "auto_start"], auto_start)
+                config.set(["modules", "ossftp", "address"], ossftp_address)
                 config.set(["modules", "ossftp", "port"], ossftp_port)
                 config.set(["modules", "ossftp", "log_level"], ossftp_loglevel)
                 config.set(["modules", "ossftp", "bucket_endpoints"], ossftp_bucketendpoints)

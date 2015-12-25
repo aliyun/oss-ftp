@@ -17,7 +17,17 @@
 			<div class="span8">
 				<input id="show-systray" type="checkbox" data-toggle="switch" />
 			</div> <!-- .span8 -->
-		</div> <!-- .row-fluid -->
+        </div> <!-- .row-fluid -->
+
+        <div class="row-fluid">
+			<div class="span4">
+				<label for="ossftp-address">ossftp 监听地址（重启生效）</label>
+			</div> <!-- .span4 -->
+			<div class="span8">
+				<input id="ossftp-address" type="text" placeholder="默认监听127.0.0.1地址"/>
+			</div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+
         <div class="row-fluid">
 			<div class="span4">
 				<label for="ossftp-port">ossftp 监听端口（重启生效）</label>
@@ -25,7 +35,8 @@
 			<div class="span8">
 				<input id="ossftp-port" type="text" placeholder="默认监听2048端口"/>
 			</div> <!-- .span8 -->
-		</div> <!-- .row-fluid -->
+        </div> <!-- .row-fluid -->
+
         <div class="row-fluid">
 			<div class="span4">
 				<label for="ossftp-loglevel">ossftp 日志等级（DEBUG，INFO，WARNING，ERROR，CRITICAL。重启生效）</label>
@@ -104,6 +115,9 @@
 
                     $( "#show-systray").prop('checked', true);
                 }
+                if ( result['ossftp_address'] != '') {
+                    $( '#ossftp-address').val(result['ossftp_address'])
+                }
                 if ( result['ossftp_port'] != 0) {
                     $( '#ossftp-port').val(result['ossftp_port'])
                 }
@@ -160,6 +174,7 @@
             'auto_start':$('#auto-start').is(':checked') ? 1:0,
             'popup_webui':$('#popup-webui').is(':checked') ? 1:0,
             'show_systray':$('#show-systray').is(':checked') ? 1:0,
+            'ossftp_address':$('#ossftp-address').val(),
             'ossftp_port':$('#ossftp-port').val(),
             'ossftp_loglevel':$('#ossftp-loglevel').val(),
             'ossftp_bucketendpoints':$('#ossftp-bucketendpoints').val()
