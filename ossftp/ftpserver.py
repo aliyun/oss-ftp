@@ -56,7 +56,7 @@ def set_logger(level):
     logger.setLevel(level)
     logger.addHandler(handler)
 
-def start_ftp(masquerade_address, port, log_level, bucket_endpoints, internal):
+def start_ftp(masquerade_address, listen_address, port, log_level, bucket_endpoints, internal):
 
     if log_level == "DEBUG":
         level = logging.DEBUG
@@ -88,19 +88,22 @@ def start_ftp(masquerade_address, port, log_level, bucket_endpoints, internal):
     handler.authorizer = authorizer
     handler.abstracted_fs = OssFS
     handler.banner = 'oss ftpd ready.'
-    address = ('0.0.0.0', port)
+    address = (listen_address, port)
     set_logger(level)
     server = FTPServer(address, handler)
     server.serve_forever()
 
 def main(args, opts):
     masquerade_address = ""
+    listen_address = "127.0.0.1"
     port = 2048 
     log_level = "DEBUG"
     bucket_endpoints = ""
     internal = None
     if opts.masquerade_address:
         masquerade_address = opts.masquerade_address
+    if opts.listen_address:
+        listen_address = opts.listen_address
     if opts.port:
         try:
             port = int(opts.port)
@@ -116,12 +119,13 @@ def main(args, opts):
 
     if opts.internal:
         internal = opts.internal
-    start_ftp(masquerade_address, port, log_level, bucket_endpoints, internal)
+    start_ftp(masquerade_address, listen_address, port, log_level, bucket_endpoints, internal)
     
 if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option("", "--masquerade_address", dest="masquerade_address", help="the ip that will reply to FTP Client, then client will send data request to this address.")
-    parser.add_option("", "--port", dest="port", help="the local port which ftpserver will listen")
+    parser.add_option("", "--listen_address", dest="listen_address", help="the address which ftpserver will listen, default is 127.0.0.1")
+    parser.add_option("", "--port", dest="port", help="the local port which ftpserver will listen, default is 2048")
     parser.add_option("", "--loglevel", dest="loglevel", help="DEBUG/INFO/")
     parser.add_option("", "--bucket_endpoints", dest="bucket_endpoints", help="use this endpoint to access oss")
     parser.add_option("", "--internal", dest="internal", help="access oss from internal domain or not")
