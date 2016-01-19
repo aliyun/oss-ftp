@@ -4,7 +4,6 @@ import launcher_log
 
 
 import json
-from collections import OrderedDict
 from distutils.version import LooseVersion
 
 
@@ -17,7 +16,7 @@ config = {}
 def load():
     global config, config_path
     try:
-        config = json.load(file(config_path, 'r'), object_pairs_hook=OrderedDict)
+        config = json.load(file(config_path, 'r'))
         #print json.dumps(config, sort_keys=True, separators=(',',':'), indent=4)
     except Exception as  exc:
         print "Error in configuration file:", exc

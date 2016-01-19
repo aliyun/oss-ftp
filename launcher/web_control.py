@@ -18,7 +18,6 @@ ossftp_log_path = os.path.join(root_path, "data", "ossftp", "ossftp.log")
 ossftp_log_tailer = LogFileTailer(ossftp_log_path)
 
 import json
-from collections import OrderedDict
 import launcher_log
 import module_init
 import config
@@ -74,7 +73,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             if not os.path.isfile(menu_path):
                 continue
                 
-            module_menu = json.load(file(menu_path, 'r'), object_pairs_hook=OrderedDict)          
+            module_menu = json.load(file(menu_path, 'r'))          
             module_menus[module] = module_menu
 
         module_menus = sorted(module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
@@ -214,7 +213,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             #logging.debug("m:%s id:%d", module, v['menu_sort_id'])
             title = v["module_title"]
             menu_content += '<li class="nav-header">%s</li>\n' % title
-            for sub_id in v['sub_menus']:
+            for sub_id in sorted(v['sub_menus']):
                 sub_title = v['sub_menus'][sub_id]['title']
                 sub_url = v['sub_menus'][sub_id]['url']
                 if target_module == title and target_menu == sub_url:
