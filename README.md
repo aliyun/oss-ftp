@@ -12,6 +12,7 @@ OSS-FTP是一款基于阿里云OSS的FTP server工具, 通过将FTP请求转换�
 
 ## 环境依赖
 
+* python 2.6
 * python 2.7
 
 ## 下载
