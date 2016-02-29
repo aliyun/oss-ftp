@@ -75,13 +75,13 @@ loglevel决定了ftpserver的日志级别, DEBUG级别输出的日志信息会�
 - 用户：access_key_id/bucket_name (注意： 这里的/是必须的，不是‘或’的意思，如用户名'tSxyiUM3NKswPMEp/test-hz-jh-002')
 - 密码：access_key_secret
 
-![](https://docs-aliyun.cn-hangzhou.oss.aliyun-inc.com/cn/oss/0.4.46/assets/image/ossftp_filezilla.png)
-
 ##可能遇到的问题
 
 * 如果连接FTP server时，遇到以下错误：
 
-![](https://docs-aliyun.cn-hangzhou.oss.aliyun-inc.com/cn/oss/0.4.46/assets/image/ossftp-cannot-list-bucket-error.png)
+```bash
+$ 530 Can't list buckets, check your access_key. 
+```
 
 有两种可能:
 
@@ -89,12 +89,11 @@ loglevel决定了ftpserver的日志级别, DEBUG级别输出的日志信息会�
 解决：请输入正确的信息后再重试
 
 2. 所用的access_key信息为ram 子账户的access_key，而子账户不具有List buckets权限。
-
-  解决: 给ram子账户赋予足够的权限才能使用FTP工具. 关于用使用ram访问oss时的访问控制，请参考文档[访问控制]({{doc/[8]用户手册/安全管理/访问控制.md}})
+解决: 给ram子账户赋予足够的权限才能使用FTP工具. 关于用使用ram访问oss时的访问控制，请参考文档[访问控制](https://www.aliyun.com/product/ram/)
 
 > - **只读访问** OSS FTP工具需要的权限列表为
  ['ListBuckets', 'GetBucketAcl', 'ListObjects', 'GetObject', 'HeadObject'].
->  关于如何创建一个具有**只读访问**的ram子账户，请参考图文教程[如何结合ram实现文件共享]({{doc/[7]周边工具/ossftp/如何结合ram实现文件共享.md}})
+>  关于如何创建一个具有**只读访问**的ram子账户，请参考图文教程[如何结合ram实现文件共享](https://help.aliyun.com/document_detail/oss/utilities/ossftp/build-file-share-by-ram.html)
 
 > - 如果允许ram子账户**上传文件**，还需要['PutObject']
 
