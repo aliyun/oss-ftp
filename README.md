@@ -90,7 +90,4 @@ $ export LC_ALL=en_US.UTF-8; export LANG="en_US.UTF-8"; locale
 ```
 
 ## 更多文档
-
-[OSS FTP工具发布啦](http://bbs.aliyun.com/read/268724.html)
-
-[如何基于OSS FTP工具实现远程附件上传到OSS](http://bbs.aliyun.com/read/268734.html)
+[oss ftp官网主页](https://help.aliyun.com/document_detail/oss/utilities/ossftp/install.html)
