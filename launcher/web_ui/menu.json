@@ -1,0 +1,18 @@
+{
+    "menu_sort_id":1,
+        "module_title":"OSS-FTP",
+        "sub_menus":{
+            "1":{
+                "title":"配置",
+                "url":"config"
+            },
+            "2":{
+                "title":"日志",
+                "url":"logging"
+            },
+            "3":{
+                "title":"关于",
+                "url":"about"
+            }
+        }
+}

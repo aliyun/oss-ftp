@@ -1,0 +1,243 @@
+<form id="ossftp-config">
+	<div id="options">
+		<div class="row-fluid">
+			<div class="span4">开机自动启动</div> <!-- .span4 -->
+			<div class="span8">
+				<input id="auto-start" type="checkbox" data-toggle="switch" />
+			</div> <!-- .span8 -->
+		</div> <!-- .row-fluid -->
+		<div class="row-fluid">
+			<div class="span4">启动时弹出状态页</div> <!-- .span4 -->
+			<div class="span8">
+				<input id="popup-webui" type="checkbox" data-toggle="switch" />
+			</div> <!-- .span8 -->
+		</div> <!-- .row-fluid -->
+		<div class="row-fluid">
+			<div class="span4">显示托盘图标</div> <!-- .span4 -->
+			<div class="span8">
+				<input id="show-systray" type="checkbox" data-toggle="switch" />
+			</div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+
+        <div class="row-fluid">
+			<div class="span4">
+				<label for="ossftp-address">ossftp 监听地址（重启生效）</label>
+			</div> <!-- .span4 -->
+			<div class="span8">
+				<input id="ossftp-address" type="text" placeholder="默认监听127.0.0.1地址"/>
+			</div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+
+        <div class="row-fluid">
+			<div class="span4">
+				<label for="ossftp-port">ossftp 监听端口（重启生效）</label>
+			</div> <!-- .span4 -->
+			<div class="span8">
+				<input id="ossftp-port" type="text" placeholder="默认监听2048端口"/>
+			</div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+
+        <div class="row-fluid">
+			<div class="span4">
+				<label for="ossftp-loglevel">ossftp 日志等级（DEBUG，INFO，WARNING，ERROR，CRITICAL。重启生效）</label>
+			</div> <!-- .span4 -->
+			<div class="span8">
+				<input id="ossftp-loglevel" type="text" placeholder="默认等级为INFO"/>
+			</div> <!-- .span8 -->
+		</div> <!-- .row-fluid -->
+        <div class="row-fluid">
+			<div class="span4">
+				<label for="ossftp-bucketendpoints">Bucket endpoints（大部分情况无需设置，如何设置请参考wiki。重启生效）</label>
+			</div> <!-- .span4 -->
+			<div class="span8">
+				<input id="ossftp-bucketendpoints" type="text" placeholder="示例：bucket-a.oss-cn-hangzhou.aliyuncs.com, bucket-b.oss-cn-qingdao.aliyuncs.com"/>
+			</div> <!-- .span8 -->
+		</div> <!-- .row-fluid -->
+	</div> <!-- #options -->
+	<div class="row-fluid">
+        <div class="span12">
+            <button class="btn btn-primary btn-block" type="button" onclick="onSubmit()">保存配置</button>
+        </div> <!-- .span12 -->
+    </div> <!-- .row-fluid -->
+	<div class="row-fluid">
+        <div class="span12">
+            <button class="btn btn-primary btn-block" type="button" onclick="onRestart()">重启</button>
+        </div> <!-- .span12 -->
+    </div> <!-- .row-fluid -->
+	<div class="row-fluid">
+        <div class="span12">
+            <button class="btn btn-primary btn-block" type="button" onclick="onQuit()">退出</button>
+        </div> <!-- .span12 -->
+    </div> <!-- .row-fluid -->
+</form> <!-- #ossftp-config -->
+
+<!-- JavaScript -->
+<script type="text/javascript">
+    title('系统配置选项');
+</script>
+<script type="text/javascript">
+    $(function() {
+        $('[data-toggle=switch]').wrap('<div class="switch" />').parent().bootstrapSwitch();
+    });
+</script>
+<script type="text/javascript">
+    $(function() {
+        getStatus();
+    });
+</script>
+<script type="text/javascript">
+    function getStatus() {
+        var pageRequests = {
+            'cmd': 'get_config'
+        };
+
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: pageRequests,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['auto_start'] != 0 ) {
+                    $( "#auto-start").parent().removeClass('switch-off');
+                    $( "#auto-start").parent().addClass('switch-on');
+
+                    $( "#auto-start").prop('checked', true);
+                }
+                if ( result['popup_webui'] != 0 ) {
+                    $( "#popup-webui").parent().removeClass('switch-off');
+                    $( "#popup-webui").parent().addClass('switch-on');
+
+                    $( "#popup-webui").prop('checked', true);
+                }
+                if ( result['show_systray'] != 0 ) {
+                    $( "#show-systray").parent().removeClass('switch-off');
+                    $( "#show-systray").parent().addClass('switch-on');
+
+                    $( "#show-systray").prop('checked', true);
+                }
+                if ( result['ossftp_address'] != '') {
+                    $( '#ossftp-address').val(result['ossftp_address'])
+                }
+                if ( result['ossftp_port'] != 0) {
+                    $( '#ossftp-port').val(result['ossftp_port'])
+                }
+                if ( result['ossftp_loglevel'] != '') {
+                    $( '#ossftp-loglevel').val(result['ossftp_loglevel'])
+                }
+                if ( result['ossftp_bucketendpoints'] != '') {
+                    $( '#ossftp-bucketendpoints').val(result['ossftp_bucketendpoints'])
+                }
+            },
+            error: function() {
+                displayErrorMessage();
+            }
+        });
+    }
+</script>
+<script type="text/javascript">
+    $('.pull-down-control').click(function() {
+        var isShown = $('i.icon', this).hasClass('icon-chevron-down');
+        var id = $(this).attr('for');
+
+        if ( !isShown ) {
+            $('i.icon', this).removeClass('icon-chevron-right');
+            $('i.icon', this).addClass('icon-chevron-down');
+            $('#'+id).slideDown();
+        } else {
+            $('i.icon', this).removeClass('icon-chevron-down');
+            $('i.icon', this).addClass('icon-chevron-right');
+            $('#'+id).slideUp();
+        }
+    });
+</script>
+<script type="text/javascript">
+    function displayErrorMessage() {
+        tip('发生未知错误, 请刷新页面重试.', 'error');
+    }
+</script>
+<script type="text/javascript">
+    function restartingService() {
+        var restatingTime   = 5,
+            messageTemplate = '正在重启ossftp服务, 页面将在%s秒内刷新.';
+
+        tip(messageTemplate.format(restatingTime), 'warning');
+
+        setTimeout(function () {
+            location.reload();
+        }, restatingTime * 1000);
+    }
+</script>
+<script type="text/javascript">
+    function onSubmit() {
+        var config = {
+            'cmd':'set_config',
+            'auto_start':$('#auto-start').is(':checked') ? 1:0,
+            'popup_webui':$('#popup-webui').is(':checked') ? 1:0,
+            'show_systray':$('#show-systray').is(':checked') ? 1:0,
+            'ossftp_address':$('#ossftp-address').val(),
+            'ossftp_port':$('#ossftp-port').val(),
+            'ossftp_loglevel':$('#ossftp-loglevel').val(),
+            'ossftp_bucketendpoints':$('#ossftp-bucketendpoints').val()
+        };
+        $.ajax({
+            type: 'GET',
+            url: '/config',
+            data: config,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['res'] == 'success' ) {
+                    tip('设置已成功保存.', 'success');
+                } else {
+                    var msg = '参数设置失败：%s.'
+                    tip(msg.format(result['res']), 'error');
+                }
+            },
+            error: function() {
+                displayErrorMessage();
+            }
+        });
+    }
+</script>
+<script type="text/javascript">
+    function onRestart() {
+        var empty = {}
+		$.ajax({
+            type: 'GET',
+            url: '/restart',
+            data: empty,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['status'] == 'success' ) {
+                    restartingService();
+                } else {
+                    displayErrorMessage();
+                }
+            },
+            error: function() {
+                displayErrorMessage();
+            }
+        });
+    }
+</script>
+<script type="text/javascript">
+    function onQuit() {
+        var empty = {}
+		$.ajax({
+            type: 'GET',
+            url: '/quit',
+            data: empty,
+            dataType: 'JSON',
+            success: function(result) {
+                if ( result['status'] == 'success' ) {
+                    tip('OSS-FTP 服务已停止', 'success');
+                } else {
+                    displayErrorMessage();
+                }
+            },
+            error: function() {
+                displayErrorMessage();
+            }
+        });
+    }
+</script>
+

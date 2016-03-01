@@ -1,0 +1,16 @@
+{
+  "modules":{
+    "launcher":{
+      "auto_start":0,
+      "control_port":8192,
+      "popup_webui":1,
+      "show_systray":1
+    },
+    "ossftp":{
+      "address":"127.0.0.1",
+      "bucket_endpoints":"",
+      "log_level":"INFO",
+      "port":2048
+    }
+  }
+}
