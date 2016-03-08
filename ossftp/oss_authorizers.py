@@ -2,11 +2,19 @@
 import os, sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-lib = os.path.abspath( os.path.join(python_path, 'lib'))
-if lib not in sys.path:
-    sys.path.append(lib)
-
+root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+if sys.platform.startswith("linux"):
+    python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib"))
+    sys.path.append(python_lib_path)
+elif sys.platform == "darwin":
+    python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib"))
+    sys.path.append(python_lib_path)
+    extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjc"
+    sys.path.append(extra_lib)
+elif sys.platform == "win32":
+    pass
+else:
+    raise RuntimeError("detect platform fail:%s" % sys.platform)
 
 import time
 import logging
@@ -23,7 +31,7 @@ class BucketLoginInfo():
         self.bucket_name = bucket_name
         self.endpoint = endpoint
         self.access_key = {access_key_id:access_key_secret}
-        self.expire_time = time.time() + 60 
+        self.expire_time = time.time() + 60
 
     def update_access_key(self, access_key_id, access_key_secret):
         self.access_key[access_key_id] = access_key_secret
