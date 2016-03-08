@@ -108,6 +108,9 @@ $ 530 Can't list buckets, check your access_key.
 ```bash
 $ export LC_ALL=en_US.UTF-8; export LANG="en_US.UTF-8"; locale
 ```
+## 如何运行测试
+进入test目录，配置test.cfg， 然后直接用python运行{login.py, file.py, dir.py}即可运行oss ftp的相关测试
+
 
 ## 更多文档
 [oss ftp官网主页](https://help.aliyun.com/document_detail/oss/utilities/ossftp/install.html)
