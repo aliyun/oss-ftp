@@ -144,7 +144,7 @@ class OssFS(AbstractedFS):
                                                        size, mtimestr, basename.rstrip('/'))
             yield line.encode('utf8', self.cmd_channel.unicode_errors)
     
-    def format_mlsx(self, basedir, listing, perms, facts, ingore_err=True):
+    def format_mlsx(self, basedir, listing, perms, facts, ignore_err=True):
         assert isinstance(basedir, unicode), basedir
         if listing:
             assert isinstance(listing[0][0], unicode)
