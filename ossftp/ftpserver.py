@@ -78,7 +78,7 @@ def start_ftp(masquerade_address, listen_address, port, log_level, bucket_endpoi
             if len(url.split('.', 1)) != 2:
                 print "url:%s format error." % (url)
                 continue
-            bucket_name, endpoint = url.split('.', 1)
+            bucket_name, endpoint = url.strip().split('.', 1)
             authorizer.bucket_endpoints[bucket_name] = endpoint
     authorizer.internal = internal
     handler = FTPHandler
