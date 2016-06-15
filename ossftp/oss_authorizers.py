@@ -113,15 +113,23 @@ class OssAuthorizer(DummyAuthorizer):
         return internal_endpoint
 
     def oss_check(self, bucket_name, default_endpoint, access_key_id, access_key_secret):
+        # 1. when specify bucket endpoints
         if bucket_name in self.bucket_endpoints:
             endpoint = self.bucket_endpoints[bucket_name]
             try:
                 bucket = oss2.Bucket(oss2.Auth(access_key_id, access_key_secret), endpoint, bucket_name, connect_timeout=5.0, app_name=defaults.app_name)
-                res = bucket.get_bucket_acl()
+                faked_obj_name = "test-faked-objname-to-check-ak-if-right"
+                res = bucket.get_object(faked_obj_name)
+            except oss2.exceptions.NoSuchKey as e:
+                pass
+            except oss2.exceptions.AccessDenied as e:
+                raise AuthenticationFailed("get random object was denied, check your access_key/access_id.request_id:%s, status:%s, code:%s, message:%s"% (e.request_id, unicode(e.status), e.code, e.message))
             except oss2.exceptions.OssError as e:
                 raise AuthenticationFailed("access bucket:%s using specified \
                         endpoint:%s failed. request_id:%s, status:%s, code:%s, message:%s" % (bucket_name, endpoint, e.request_id, unicode(e.status), e.code, e.message))
             return endpoint 
+        
+        # 2. when not specify bucket endpoints
         try:
             service = oss2.Service(oss2.Auth(access_key_id, access_key_secret), default_endpoint, app_name=defaults.app_name)
             res = service.list_buckets(prefix=bucket_name)
@@ -129,7 +137,8 @@ class OssAuthorizer(DummyAuthorizer):
             raise AuthenticationFailed("can't list buckets, check your access_key.request_id:%s, status:%s, code:%s, message:%s"% (e.request_id, unicode(e.status), e.code, e.message))
         except oss2.exceptions.OssError as e:
             raise AuthenticationFailed("list buckets error. request_id:%s, status:%s, code:%s, message:%s" % (e.request_id, unicode(e.status), e.code, e.message))
-
+        
+        # 3. internal_endpoint or public_endpoint
         bucket_list = res.buckets
         for bucket in bucket_list:
             if bucket.name == bucket_name:
