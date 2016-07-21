@@ -132,6 +132,16 @@ class OssFileOperation:
             to_add = entry.decode('utf-8')[len(key):]
             self.contents.append((to_add, -1, 0))
         return self.contents
+   
+    # show info about path
+    def infopath(self):
+        size = -1
+        last_modified_str = u"1970/01/01 00:00:00" 
+        if self.object_exists():
+            size, last_modified = self.info_object()
+            last_modified_str = datetime.datetime.utcfromtimestamp(last_modified).strftime('%Y/%m/%d %H:%M:%S').decode('utf-8')
+
+        return size, last_modified_str 
 
     @retry
     def object_exists(self):
@@ -164,6 +174,14 @@ class OssFileOperation:
     def cache_delete(self, cache, key):
         cache.pop(key, None)
 
+    def info_object(self):
+        resp = self.bucket.head_object(self.key)
+        content_length = resp.content_length
+        if not content_length:
+            content_length = 0
+        mtime = resp.last_modified
+        return content_length, mtime
+ 
     @retry
     def head_object(self):
         resp = self.bucket.head_object(self.key)

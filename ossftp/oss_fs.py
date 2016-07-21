@@ -47,6 +47,10 @@ class OssFS(AbstractedFS):
         assert isinstance(path, unicode), path
         self.oss_fs_impl.mkdir(path)
         
+    def infopath(self, path):
+        assert isinstance(path, unicode), path
+        self.oss_fs_impl.infopath(path)
+    
     def listdir(self, path):
         assert isinstance(path, unicode), path
         return self.oss_fs_impl.listdir(path)
