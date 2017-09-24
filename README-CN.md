@@ -1,6 +1,9 @@
 # OSS-FTP
 
-## [README of English](https://github.com/aliyun/oss-ftp/blob/master/README-CN.md)
+[![GitHub Version](https://badge.fury.io/gh/aliyun%2Foss-ftp.svg)](https://badge.fury.io/gh/aliyun%2Foss-ftp)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
+
+### [README of English](https://github.com/aliyun/oss-ftp/blob/master/README-CN.md)
 
 ## 介绍
 OSS-FTP是一款基于阿里云OSS的FTP server工具, 通过将FTP请求转换为OSS请求，使得用户可以用FTP的方式来使用OSS.
