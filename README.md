@@ -1,113 +1,119 @@
-# OSS-FTP工具
+﻿# OSS-FTP
 
-## 介绍
-OSS-FTP是一款基于阿里云OSS的FTP server工具, 通过将FTP请求转换为OSS请求，使得用户可以用FTP的方式来使用OSS.
+## [README of Chinese](https://github.com/aliyun/oss-ftp/blob/master/README.md)
 
-###主要特性
+## Introduction
+OSS-FTP is an FTP server tool based on Alibaba Cloud OSS. It converts FTP requests into OSS requests for users to use the OSS in an FTP-like approach.
 
-- **跨平台:** 无论是windows、Linux还是Mac， 无论是32位还是64位操作系统，无论是图形界面还是命令行都可以运行
-- **免安装:** 解压后可直接运行
-- **免设置:** 无需设置即可运行
-- **透明化:** FTP工具是python写的，您可以看到完整的源码，我们稍后也会开源到Github
+### Main features
 
-###主要功能
+- **Cross-platform:** This tool can run in a graphic interface or using command lines on 32-bit and 64-bit Windows, Linux and Mac operating systems.
+- **Installation-free:** You can run this tool directly after extraction.
+- **Configuration-free:** You can run the tool without making any configuration.
+- **Transparent:** The FTP tool is written in Python and you can see the complete source code. We will soon make it open source on GitHub.
 
-- 支持文件／文件夹的上传／下载／删除等操作
-- 通过Multipart方式，分片上传大文件
-- 支持大部分FTP指令，可以满足日常FTP的使用需求
+### Main functionality
 
-###*注意*
-> 1. 目前在1.0版本中，考虑到安装部署的简便, OSS FTP工具没有支持TLS加密。由于FTP协议是明文传输的，**为了防止您的密码泄漏，建议将FTP server和client运行在同一台机器上**，通过127.0.0.1:port的方式来访问
-2. 不支持rename, move操作
-3. 安装包解压后的路径不要含有中文
-4. FTP server的管理控制页面在低版本的IE中可能打不开
-5. FTP server支持的Python版本: python2.6, python2.7
+- Support file/folder upload, download, delete and other operations.
+- Support multipart upload of large files.
+- Support most FTP commands and can satisfy daily FTP usage needs.
 
+### *Note*
+- Currently, the OSS FTP V1.0 does not support TLS encryption for the ease of installation and deployment. Because the FTP protocol implements plaintext transmission, **we recommend you run the FTP server and client on the same server to prevent password leaks** and access using 127.0.0.1:port.
+- Rename and move operations are not supported. 
+- Do not include Chinese characters in the path to which the installer package is unzipped.
+- The FTP server's management control page may fail to be opened in older versions of Internet Explorer.
+- Python versions supported by the FTP server:  Python2.6 and Python2.7.
 
-## 启动FTP server
-有两种方法:
+## Start FTP server
 
-a. 启动FTP server的同时，启动一个简单的web server，方便进行FTP服务器的配置和状态监控
+Two methods are available:
 
-在FTP工具的根目录，直接运行对应的start脚本
+1. Start a simple web server when starting the FTP server for the convenience of monitoring the FTP server configuration and status. 
 
-- Windows:
-双击运行start.vbs即可
+Run the corresponding start script directly in the root directory of the FTP tool.
 
-- Linux:
+- Windows
+Double click start.vbs to run the tool.
+
+- Linux
 ```bash
 $ bash start.sh
 ```
 
-- Mac:
+- Mac
 ```bash
 $ bash start.command
 ```
 
-这种方法会读取FTP工具根目录下的**config.json**文件, 然后默认在本地的127.0.0.1:2048端口监听FTP请求，同时会在127.0.0.1:8192端口开启一个web服务器，方便对FTP server进行管理。
+In this method, the system will read the **config.json** file in the root directory of the FTP tool, and listens for FTP requests at the local 127.0.0.1:2048 port by default. At the same time, a web server will be activated at the 127.0.0.1:8192 port for the convenience of managing the FTP server.
 
 
-b. 轻量级的启动方式，即只启动一个FTP server
-进入到ossftp目录
+2. A lightweight startup mode where only one FTP server is initiated.
+Enter the ossftp directory.
 
 ```bash
 $ python ftpserver.py
 ```
-这会在127.0.0.1:2048端口启动一个FTP 服务器
+This will start an FTP server at the 127.0.0.1:2048 port. 
 
-启动时也可以通过参数指定监听地址和端口等信息
+You can also specify the listening address and port among other information in parameters at the startup.
 ```bash
 python ftpserver.py --listen_address=<ip address> --port=<your local port> --internal=<True/False> --loglevel=<DEBUG/INFO>
 ```
-如果 internal为"True", FTP server将通过内网域名访问OSS.
-如果 internal为"False", FTP server通过公网域名访问OSS.
-当不指定internal字段时，FTP server就会自动探测网络状态, 优先选择从内网域名访问OSS
+If the internal value is "True", the FTP server will access the OSS through the intranet domain name.
+If the internal value is "False", the FTP server will access the OSS through the internet domain name.
+When the internal field is not specified, the FTP server will automatically probe the network status and prioritize intranet access to the OSS.
 
-> 关于OSS的访问域名的更多信息，请参考https://help.aliyun.com/document_detail/oss/user_guide/endpoint_region.html
+> For more information on domain names for OSS access, refer tohttps://help.aliyun.com/document_detail/oss/user_guide/endpoint_region.html。
 
-loglevel决定了ftpserver的日志级别, DEBUG级别输出的日志信息会更详细
+The loglevel decides the level of the ftpserver log. The DEBUG-level output log provides more detailed information.
 
-##连接到FTP server
-推荐使用[FileZilla客户端](https://filezilla-project.org/)去连接FTP server。下载安装后，按如下方式连接即可:
+## Connect to the FTP server
+We recommend you use [FileZilla Client]((https://filezilla-project.org/)) to connect to the FTP server. After downloading and installing the tool, you can connect it to the FTP server following the instructions below: 
 
-- 主机: 127.0.0.1
-- 登录类型： 正常
-- 用户：access_key_id/bucket_name (注意： 这里的/是必须的，不是‘或’的意思，如用户名'tSxyiUM3NKswPMEp/test-hz-jh-002')
-- 密码：access_key_secret
+- Host:  127.0.0.1.
+- Logon type:  Normal. 
+- User: access_key_id/bucket_name (Note: Here the "/" is necessary. It does not mean "or". For example, the user name 'tSxyiUM3NKswPMEp/test-hz-jh-002'). 
+- Password: access_key_secret. 
 
-##可能遇到的问题
+## Possible problems
 
-* 如果连接FTP server时，遇到以下错误：
+**1. If the following error occurs during connection to the FTP server:**
 
 ```bash
 $ 530 Can't list buckets, check your access_key. 
 ```
 
-有两种可能:
+There are two possible reasons: 
 
-1. 输入的 access_key_id 和 access_key_secret有误.
-解决：请输入正确的信息后再重试
+a. The input access_key_id and access_key_secret contain errors. 
+Solution: Enter the correct information and try again. 
 
-2. 所用的access_key信息为ram 子账户的access_key，而子账户不具有List buckets权限。
-解决: 给ram子账户赋予足够的权限才能使用FTP工具. 关于用使用ram访问oss时的访问控制，请参考文档[访问控制](https://www.aliyun.com/product/ram/)
+b. The access_key used belongs to the RAM sub-account which has no permission for listing buckets. 
+Solution:  Grant required permission to the RAM sub-account to use the FTP tool. To control RAM access to the OSS, refer to the [Access Control](https://www.aliyun.com/product/ram/)documentation. 
 
-> - **只读访问** OSS FTP工具需要的权限列表为
+> - **Read-only access** The permissions required by the OSS FTP tool are listed below. 
  ['ListBuckets', 'GetBucketAcl', 'ListObjects', 'GetObject', 'HeadObject'].
->  关于如何创建一个具有**只读访问**的ram子账户，请参考图文教程[如何结合ram实现文件共享](https://help.aliyun.com/document_detail/oss/utilities/ossftp/build-file-share-by-ram.html)
+>  To learn how to create an RAM sub-account with **read-only access** permission, refer to the illustrations on [How to achieve file sharing using RAM](https://help.aliyun.com/document_detail/oss/utilities/ossftp/build-file-share-by-ram.html). 
 
-> - 如果允许ram子账户**上传文件**，还需要['PutObject']
+> - If you want to allow the RAM sub-account to **upload files**, you also need ['PutObject'].
 
-> - 如果允许ram子账户**删除文件**，还需要['DeleteObject']
+> - If you want to allow the RAM sub-account to **delete objects**, you also need ['DeleteObject']. 
 
-* 如果你在Linux下运行FTP server，然后用FileZilla连接时遇到如下错误:
+**2. If you are running the FTP server on Linux and encounter the following error when using FileZilla to connect to the server:**
 
-> 501 can't decode path (server filesystem encoding is ANSI_X3.4-1968)
+> - 501 can't decode path (server filesystem encoding is ANSI_X3.4-1968)。
 
-一般是因为本地的中文编码有问题。
-在将要运行start.sh的终端中输入下面的命令，然后再重新启动即可
+this is usually because of issues in local Chinese encoding.
+Enter the following command in the terminal where you want to run start.sh, and then restart the program.
+
 ```bash
 $ export LC_ALL=en_US.UTF-8; export LANG="en_US.UTF-8"; locale
 ```
 
-## 更多文档
-[oss ftp官网主页](https://help.aliyun.com/document_detail/oss/utilities/ossftp/install.html)
+## Run test
+Enter the *test* directory and configure test.cfg. Then run {login.py, file.py, dir.py} with Python to run the OSS FTP-related tests.
+
+## More documentation
+[OSS FTP official homepage](https://help.aliyun.com/document_detail/oss/utilities/ossftp/install.html).
