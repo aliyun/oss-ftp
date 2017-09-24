@@ -1,5 +1,8 @@
 ﻿# OSS-FTP
 
+[![GitHub Version](https://badge.fury.io/gh/aliyun%2Foss-ftp.svg)](https://badge.fury.io/gh/aliyun%2Foss-ftp)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
+
 ## [README of Chinese](https://github.com/aliyun/oss-ftp/blob/master/README.md)
 
 ## Introduction
