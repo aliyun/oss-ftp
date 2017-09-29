@@ -1,12 +1,17 @@
 # -*- coding:utf-8 -*-
+import os, sys
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+sys.path.append(root_path)
+
 import threading
 import time
 import unittest
 from socket import error as sock_error
-
 from ftplib import FTP, FTP_TLS, error_temp, error_perm
-from ossftp import ftpserver
 
+from ossftp import ftpserver
 from util import *
 
 class LoginTest(unittest.TestCase):
@@ -37,8 +42,6 @@ class LoginTest(unittest.TestCase):
         self.assertTrue(self.ftp_login(self.username, self.password))
         #test wrong  access_key_sercrete
         self.assertFalse(self.ftp_login(self.username, self.password+"qwerasdf"))
-        #wait until cache is expired
-        time.sleep(60) 
         self.assertTrue(self.ftp_login(self.username, self.password))
 
     def test_specified(self):
@@ -68,12 +71,6 @@ class LoginTest(unittest.TestCase):
         password_new = get_value_from_config("ftpconfig", "normal_key_new") 
         self.assertTrue(self.ftp_login(username_new, password_new))
 
-    def test_internal_true(self):
-        pass 
-
-    def test_internal_false(self):
-        pass
-
     def test_error_input(self):
         user_info = { "":"",
                 "qqqqqq":"",
@@ -100,9 +97,9 @@ class LoginTest(unittest.TestCase):
 
 if __name__ == '__main__':
     specified_url = get_value_from_config("ftpconfig", "specified_url")
-    t = myThread("thread_id_1", "", "127.0.0.1", 2048, "DEBUG", specified_url, None)
+    t = myThread("thread_id_1", "", "127.0.0.1", 2048, "DEBUG", specified_url)
     t.daemon = True
     t.start()
     #wait for ossftp ready
-    time.sleep(10)
+    time.sleep(5)
     unittest.main()

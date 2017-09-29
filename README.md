@@ -114,6 +114,9 @@ Enter the following command in the terminal where you want to run start.sh, and 
 ```bash
 $ export LC_ALL=en_US.UTF-8; export LANG="en_US.UTF-8"; locale
 ```
+## 如何运行测试
+进入test目录，配置test.cfg， 然后直接用python运行{login.py, file.py, dir.py}即可运行oss ftp的相关测试
+
 
 ## Run test
 Enter the *test* directory and configure test.cfg. Then run {login.py, file.py, dir.py} with Python to run the OSS FTP-related tests.

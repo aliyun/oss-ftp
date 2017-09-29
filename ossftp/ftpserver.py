@@ -56,7 +56,7 @@ def set_logger(level):
     logger.setLevel(level)
     logger.addHandler(handler)
 
-def start_ftp(masquerade_address, listen_address, port, log_level, bucket_endpoints, internal):
+def start_ftp(masquerade_address, listen_address, port, log_level, bucket_endpoints, internal, passive_ports):
 
     if log_level == "DEBUG":
         level = logging.DEBUG
@@ -78,10 +78,11 @@ def start_ftp(masquerade_address, listen_address, port, log_level, bucket_endpoi
             if len(url.split('.', 1)) != 2:
                 print "url:%s format error." % (url)
                 continue
-            bucket_name, endpoint = url.split('.', 1)
+            bucket_name, endpoint = url.strip().split('.', 1)
             authorizer.bucket_endpoints[bucket_name] = endpoint
     authorizer.internal = internal
     handler = FTPHandler
+    handler.passive_ports = passive_ports
     handler.permit_foreign_addresses = True
     if handler.masquerade_address != "":
         handler.masquerade_address = masquerade_address 
@@ -100,6 +101,9 @@ def main(args, opts):
     log_level = "DEBUG"
     bucket_endpoints = ""
     internal = None
+    passive_ports_start = None
+    passive_ports_end = None
+    passive_ports = None
     if opts.masquerade_address:
         masquerade_address = opts.masquerade_address
     if opts.listen_address:
@@ -119,7 +123,36 @@ def main(args, opts):
 
     if opts.internal:
         internal = opts.internal
-    start_ftp(masquerade_address, listen_address, port, log_level, bucket_endpoints, internal)
+
+    if opts.passive_ports_start:
+        try:
+            passive_ports_start = int(opts.passive_ports_start)
+        except ValueError:
+            print "invalid FTP passive_ports_start, please input a valid port like --passive_ports_start=50000"
+            exit(1)
+
+    if opts.passive_ports_end:
+        try:
+            passive_ports_end = int(opts.passive_ports_end)
+        except ValueError:
+            print "invalid FTP passive_ports_end, please input a valid port like --passive_ports_end=60000"
+            exit(1)
+    
+    if (passive_ports_start and not passive_ports_end) or (not passive_ports_start and passive_ports_end):
+        print "Youd should specify both start and end of passive_ports"
+        exit(1)
+    if passive_ports_start and passive_ports_end:
+        if passive_ports_start <=0:
+            print "passive_ports_start should >=1"
+            exit(1)
+        elif passive_ports_end >= 65536:
+            print "passive_ports_end should <= 65535"
+            exit(1)
+        elif passive_ports_start > passive_ports_end:
+            print "passive_ports_start should <= passive_ports_end"
+            exit(1)
+        passive_ports = range(passive_ports_start, passive_ports_end) 
+    start_ftp(masquerade_address, listen_address, port, log_level, bucket_endpoints, internal, passive_ports)
     
 if __name__ == '__main__':
     parser = OptionParser()
@@ -129,5 +162,7 @@ if __name__ == '__main__':
     parser.add_option("", "--loglevel", dest="loglevel", help="DEBUG/INFO/")
     parser.add_option("", "--bucket_endpoints", dest="bucket_endpoints", help="use this endpoint to access oss")
     parser.add_option("", "--internal", dest="internal", help="access oss from internal domain or not")
+    parser.add_option("", "--passive_ports_start=", dest="passive_ports_start", help="the start port of passive ports when transefer data, >=1")
+    parser.add_option("", "--passive_ports_end=", dest="passive_ports_end", help="the end port of passive ports when transefer data, <=65535")
     (opts, args) = parser.parse_args()
     main(args, opts)

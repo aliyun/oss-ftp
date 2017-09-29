@@ -2139,9 +2139,16 @@ class FTPHandler(AsyncChat):
         line = self.fs.fs2ftp(path)
         basedir, basename = os.path.split(path)
         perms = self.authorizer.get_perms(self.username)
+        
+        # RFC-3659 requires 501 response code if path not exist 
+        if not self.fs.lexists(path):
+            self.respond("501 No such path %s." % path)
+            return
+ 
         try:
+            size, last_modified_str = self.run_as_current_user(self.fs.infopath, path)
             iterator = self.run_as_current_user(
-                self.fs.format_mlsx, basedir, [basename], perms,
+                self.fs.format_mlsx, basedir, [(basename, size, last_modified_str)], perms,
                 self._current_facts, ignore_err=False)
             data = b''.join(iterator)
         except (OSError, FilesystemError) as err:
