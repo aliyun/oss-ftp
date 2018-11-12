@@ -61,6 +61,8 @@ class OssFsImpl:
         return object
 
     def get_file_operation_instance(self, path):
+        if str(path).find(":") == 1:
+            path = path[2:]
         return oss_file_operation.OssFileOperation(self.get_bucket(path), self.get_object(path), self.size_cache, self.dir_cache)
 
     def open_read(self, path):
