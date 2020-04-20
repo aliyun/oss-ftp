@@ -11,12 +11,11 @@ import logging
 import threading
 from logging.handlers import RotatingFileHandler
 import errno
-from optparse import OptionParser
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
 
-from oss_authorizers import OssAuthorizer 
-from oss_fs import OssFS
+from .ftp_authorizer import FtpAuthorizer
+from .oss_fs import OssFS
 
 class FTPd(threading.Thread):
     """
@@ -57,7 +56,7 @@ class FTPd(threading.Thread):
         elif log_level == "CRITICAL":
             logger.setLevel(logging.CRITICAL)
         else:
-            print "wrong loglevel parameter: %s" % log_level
+            print("wrong loglevel parameter: %s" % log_level)
             exit(1)
         logger.addHandler(handler)
 
@@ -70,11 +69,11 @@ class FTPd(threading.Thread):
 
         self.__set_logger(log_level)
 
-        authorizer = OssAuthorizer()
+        authorizer = FtpAuthorizer()
         if bucket_endpoints != "":
             for url in bucket_endpoints.strip().split(','):
                 if len(url.split('.', 1)) != 2:
-                    print "url:%s format error." % (url)
+                    print("url:%s format error." % (url))
                     continue
                 bucket_name, endpoint = url.split('.', 1)
                 authorizer.bucket_endpoints[bucket_name] = endpoint

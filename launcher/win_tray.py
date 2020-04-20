@@ -16,11 +16,15 @@ from systray import SysTrayIcon
 import systray.win32_adapter as win32_adapter
 import os
 import ctypes
-import _winreg as winreg
 import win32_proxy_manager
-
 import module_init
-import launcher_log
+
+from oss2.compat import is_py3
+
+if is_py3:
+    import winreg
+else:
+    import _winreg as winreg
 
 
 class Win_tray():
@@ -56,19 +60,12 @@ class Win_tray():
         self.systray._show_menu()
 
     def make_menu(self):
-        import locale
-        lang_code, code_page = locale.getdefaultlocale()
-
         proxy_stat = self.get_proxy_state()
         enable_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="enable" else 0
         auto_checked = win32_adapter.fState.MFS_CHECKED if proxy_stat=="auto" else 0   
 
-        if lang_code == "zh_CN":
-            menu_options = ((u"设置", None, self.on_show, 0),
-                        (u"重启 OSS Ftp 代理服务器", None, self.on_restart_ossftp_proxy, 0))
-        else:
-            menu_options = ((u"Config", None, self.on_show, 0),
-                        (u"Restart OSS Ftp Proxy", None, self.on_restart_ossftp_proxy, 0))
+        menu_options = ((u"Config", None, self.on_show, 0),
+                    (u"Restart OSS Ftp/Sftp Proxy", None, self.on_restart_ossftp_proxy, 0))
         return menu_options
 
     def on_show(self, widget=None, data=None):

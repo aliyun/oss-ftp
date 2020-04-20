@@ -166,6 +166,26 @@ div#log > p {
     word-wrap: break-word;
 }
 
+/* Style for logging.html */
+div#sftp-log {
+    background-color: #f4f6f6;
+    border: 2px solid #d5dbdb;
+    border-radius: 6px;
+    color: #34495e;
+    font-size: 14.994px;
+    height: 285px;
+    line-height: 24px;
+    max-width: 100%;
+    overflow-y: auto;
+    padding: 5px 11px;
+    text-indent: 0;
+}
+
+div#sftp-log > p {
+    margin-bottom: 0;
+    word-wrap: break-word;
+}
+
 td#working-appid {
     word-wrap: break-word;
     word-break: break-all;

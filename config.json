@@ -3,14 +3,26 @@
     "launcher":{
       "auto_start":0,
       "control_port":8192,
+      "oss_protocol":"https",
       "popup_webui":1,
       "show_systray":1
     },
     "ossftp":{
       "address":"127.0.0.1",
       "bucket_endpoints":"",
+      "buff_size":5,
+      "enable":0,
       "log_level":"INFO",
+      "passive_ports":"51000~52000",
       "port":2048
+    },
+    "osssftp":{
+      "address":"127.0.0.1",
+      "bucket_endpoints":"",
+      "buff_size":5,
+      "enable":1,
+      "log_level":"INFO",
+      "port":50000
     }
   }
 }
