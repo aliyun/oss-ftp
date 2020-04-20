@@ -16,16 +16,16 @@ config = {}
 def load():
     global config, config_path
     try:
-        config = json.load(file(config_path, 'r'))
+        config = json.load(open(config_path, 'r'))
         #print json.dumps(config, sort_keys=True, separators=(',',':'), indent=4)
     except Exception as  exc:
-        print "Error in configuration file:", exc
+        print("Error in configuration file:", exc)
 
 
 def save():
     global config, config_path
     try:
-        json.dump(config, file(config_path, "w"), sort_keys=True, separators=(',',':'), indent=2)
+        json.dump(config, open(config_path, "w"), sort_keys=True, separators=(',',':'), indent=2)
     except Exception as e:
         launcher_log.warn("save config %s fail %s", config_path, e)
 
@@ -68,6 +68,22 @@ def recheck_module_path():
         need_save_config = True
         set(["modules", "ossftp", "port"], 2048)
 
+    if get(["modules", "ossftp", "enable"], -1) == -1:
+        need_save_config = True
+        set(["modules", "ossftp", "enable"], 1)
+
+    if get(["modules", "osssftp", "address"], -1) == -1:
+        need_save_config = True
+        set(["modules", "osssftp", "address"], "127.0.0.1")
+
+    if get(["modules", "osssftp", "port"], -1) == -1:
+        need_save_config = True
+        set(["modules", "osssftp", "port"], 50000)
+
+    if get(["modules", "osssftp", "enable"], -1) == -1:
+        need_save_config = True
+        set(["modules", "osssftp", "enable"], 0)
+
     if get(["modules", "launcher", "control_port"], 0) == 0:
         need_save_config = True
         set(["modules", "launcher", "control_port"], 8192)
@@ -86,6 +102,10 @@ def create_data_path():
     if not os.path.isdir(data_ossftp_path):
         os.mkdir(data_ossftp_path)
 
+    data_osssftp_path = os.path.join(data_path, 'osssftp')
+    if not os.path.isdir(data_osssftp_path):
+        os.mkdir(data_osssftp_path)
+
 def main():
     create_data_path()
     if os.path.isfile(config_path):
@@ -99,12 +119,12 @@ main()
 def test():
     load()
     val = get(["web_ui", "popup_webui"], 0)
-    print val
+    print(val)
 
 def test2():
     set(["web_ui", "popup_webui"], 0)
     set(["web_ui", "popup"], 0)
-    print config
+    print(config)
 
 if __name__ == "__main__":
     test2()

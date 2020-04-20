@@ -5,18 +5,22 @@ import os, sys
 import time
 import atexit
 import webbrowser
-import launcher_log
+import platform
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 if root_path not in sys.path:
     sys.path.append(root_path)
 
 has_desktop = True
 if sys.platform.startswith("linux"):
-    python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib"))
+    python_lib_path = None
+    if (platform.architecture()[0] == '32bit'):
+        python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib32"))
+    else:
+        python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib64"))
     sys.path.append(python_lib_path)
-    from ossftp.ftpd import FTPd
+    # from ossftp.ftpd import FTPd
 
     def X_is_running():
         try:
@@ -35,13 +39,13 @@ if sys.platform.startswith("linux"):
 
 elif sys.platform == "win32":
     from win_tray import sys_tray
-    from ossftp.ftpd import FTPd
+    # from ossftp.ftpd import FTPd
 elif sys.platform == "darwin":
-    python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib"))
+    python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "macos", "lib"))
     sys.path.append(python_lib_path)
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjc"
     sys.path.append(extra_lib)
-    from ossftp.ftpd import FTPd
+    # from ossftp.ftpd import FTPd
 
     try:
         import mac_tray as sys_tray
@@ -57,7 +61,7 @@ import web_control
 import module_init
 
 def exit_handler():
-    print 'Stopping all modules before exit!'
+    print('Stopping all modules before exit!')
     module_init.stop_all()
     web_control.stop()
 

@@ -1,13 +1,11 @@
 # -*- coding:utf-8 -*-
-import threading
+
+from util import *
 import time
 import unittest
 from socket import error as sock_error
 
 from ftplib import FTP, FTP_TLS, error_temp, error_perm
-from ossftp import ftpserver
-
-from util import *
 
 class LoginTest(unittest.TestCase):
 
@@ -99,6 +97,7 @@ class LoginTest(unittest.TestCase):
             self.assertFalse(self.ftp_login(username, password))
 
 if __name__ == '__main__':
+    print('\n\nstart test %s' % __file__)
     specified_url = get_value_from_config("ftpconfig", "specified_url")
     t = myThread("thread_id_1", "", "127.0.0.1", 2048, "DEBUG", specified_url, None)
     t.daemon = True
