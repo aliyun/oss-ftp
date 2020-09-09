@@ -1,0 +1,18 @@
+{
+    "menu_sort_id":1,
+        "module_title":"OSS-FTP",
+        "sub_menus":{
+            "1":{
+                "title":"Config",
+                "url":"config"
+            },
+            "2":{
+                "title":"Logging",
+                "url":"logging"
+            },
+            "3":{
+                "title":"About",
+                "url":"about"
+            }
+        }
+}

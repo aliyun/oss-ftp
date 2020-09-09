@@ -71,6 +71,10 @@ def recheck_module_path():
     if get(["modules", "launcher", "control_port"], 0) == 0:
         need_save_config = True
         set(["modules", "launcher", "control_port"], 8192)
+    
+    if get(["modules", "launcher", "language"], "") == "":
+        need_save_config = True
+        set(["modules", "launcher", "language"], "cn")
 
     return need_save_config
 

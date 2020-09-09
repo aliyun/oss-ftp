@@ -71,7 +71,10 @@ class OssFsImpl:
     
     def mkdir(self, path):
         return self.get_file_operation_instance(path).mkdir()
-        
+   
+    def infopath(self, path):
+        return self.get_file_operation_instance(path).infopath()
+    
     def listdir(self, path):
         return self.get_file_operation_instance(path).listdir()
     

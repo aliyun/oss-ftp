@@ -1,19 +1,19 @@
 <form id="ossftp-config">
 	<div id="options">
 		<div class="row-fluid">
-			<div class="span4">开机自动启动</div> <!-- .span4 -->
+			<div class="span4">Start ossftp on boot</div> <!-- .span4 -->
 			<div class="span8">
 				<input id="auto-start" type="checkbox" data-toggle="switch" />
 			</div> <!-- .span8 -->
 		</div> <!-- .row-fluid -->
 		<div class="row-fluid">
-			<div class="span4">启动时弹出状态页</div> <!-- .span4 -->
+			<div class="span4">Popup web</div> <!-- .span4 -->
 			<div class="span8">
 				<input id="popup-webui" type="checkbox" data-toggle="switch" />
 			</div> <!-- .span8 -->
 		</div> <!-- .row-fluid -->
 		<div class="row-fluid">
-			<div class="span4">显示托盘图标</div> <!-- .span4 -->
+			<div class="span4">Show systray</div> <!-- .span4 -->
 			<div class="span8">
 				<input id="show-systray" type="checkbox" data-toggle="switch" />
 			</div> <!-- .span8 -->
@@ -21,36 +21,36 @@
 
         <div class="row-fluid">
 			<div class="span4">
-				<label for="ossftp-address">ossftp 监听地址（重启生效）</label>
+				<label for="ossftp-address">ossftp address (need restart when changed) </label>
 			</div> <!-- .span4 -->
 			<div class="span8">
-				<input id="ossftp-address" type="text" placeholder="默认监听127.0.0.1地址"/>
+				<input id="ossftp-address" type="text" placeholder="default 127.0.0.1"/>
 			</div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
 
         <div class="row-fluid">
 			<div class="span4">
-				<label for="ossftp-port">ossftp 监听端口（重启生效）</label>
+				<label for="ossftp-port">ossftp port (need restart when changed)</label>
 			</div> <!-- .span4 -->
 			<div class="span8">
-				<input id="ossftp-port" type="text" placeholder="默认监听2048端口"/>
+				<input id="ossftp-port" type="text" placeholder="default is 2048"/>
 			</div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
 
         <div class="row-fluid">
 			<div class="span4">
-				<label for="ossftp-loglevel">ossftp 日志等级（DEBUG，INFO，WARNING，ERROR，CRITICAL。重启生效）</label>
+				<label for="ossftp-loglevel">ossftp log level (DEBUG, INFO, WARNING, ERROR, CRITICAL, need restart when changed)</label>
 			</div> <!-- .span4 -->
 			<div class="span8">
-				<input id="ossftp-loglevel" type="text" placeholder="默认等级为INFO"/>
+				<input id="ossftp-loglevel" type="text" placeholder="default is INFO"/>
 			</div> <!-- .span8 -->
 		</div> <!-- .row-fluid -->
         <div class="row-fluid">
 			<div class="span4">
-				<label for="ossftp-bucketendpoints">Bucket endpoints（大部分情况无需设置，如何设置请参考wiki。重启生效）</label>
+				<label for="ossftp-bucketendpoints">Bucket endpoints</label>
 			</div> <!-- .span4 -->
 			<div class="span8">
-				<input id="ossftp-bucketendpoints" type="text" placeholder="示例：bucket-a.oss-cn-hangzhou.aliyuncs.com, bucket-b.oss-cn-qingdao.aliyuncs.com"/>
+				<input id="ossftp-bucketendpoints" type="text" placeholder="like: bucket-a.oss-cn-hangzhou.aliyuncs.com, bucket-b.oss-cn-qingdao.aliyuncs.com"/>
 			</div> <!-- .span8 -->
 		</div> <!-- .row-fluid -->
         <div class="row-fluid">
@@ -65,24 +65,24 @@
 	</div> <!-- #options -->
 	<div class="row-fluid">
         <div class="span12">
-            <button class="btn btn-primary btn-block" type="button" onclick="onSubmit()">保存配置</button>
+            <button class="btn btn-primary btn-block" type="button" onclick="onSubmit()">Save config</button>
         </div> <!-- .span12 -->
     </div> <!-- .row-fluid -->
 	<div class="row-fluid">
         <div class="span12">
-            <button class="btn btn-primary btn-block" type="button" onclick="onRestart()">重启</button>
+            <button class="btn btn-primary btn-block" type="button" onclick="onRestart()">Restart</button>
         </div> <!-- .span12 -->
     </div> <!-- .row-fluid -->
 	<div class="row-fluid">
         <div class="span12">
-            <button class="btn btn-primary btn-block" type="button" onclick="onQuit()">退出</button>
+            <button class="btn btn-primary btn-block" type="button" onclick="onQuit()">Exit</button>
         </div> <!-- .span12 -->
     </div> <!-- .row-fluid -->
 </form> <!-- #ossftp-config -->
 
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('系统配置选项');
+    title('Config');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -164,13 +164,13 @@
 </script>
 <script type="text/javascript">
     function displayErrorMessage() {
-        tip('发生未知错误, 请刷新页面重试.', 'error');
+        tip('Unknow error, please try reload page again', 'error');
     }
 </script>
 <script type="text/javascript">
     function restartingService() {
         var restatingTime   = 5,
-            messageTemplate = '正在重启ossftp服务, 页面将在%s秒内刷新.';
+            messageTemplate = 'Restarting ossftp, page will be reloaded in %s seconds';
 
         tip(messageTemplate.format(restatingTime), 'warning');
 
@@ -182,7 +182,7 @@
 <script type="text/javascript">
     function reloadPage() {
         var restatingTime   = 1,
-            messageTemplate = '配置已经更新，将刷新页面';
+            messageTemplate = 'Config is updated, page will be reloaded';
 
         tip(messageTemplate.format(restatingTime), 'warning');
 
@@ -211,10 +211,10 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('设置已成功保存.', 'success');
+                    tip('Config save successfully.', 'success');
                     reloadPage();
                 } else {
-                    var msg = '参数设置失败：%s.'
+                    var msg = 'Config save error:%s.'
                     tip(msg.format(result['res']), 'error');
                 }
             },
@@ -255,7 +255,7 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['status'] == 'success' ) {
-                    tip('OSS-FTP 服务已停止', 'success');
+                    tip('OSS-FTP stopped', 'success');
                 } else {
                     displayErrorMessage();
                 }

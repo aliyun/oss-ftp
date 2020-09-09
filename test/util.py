@@ -14,7 +14,7 @@ CONFIG_FILE="test.cfg"
 
 class myThread(threading.Thread):
 
-    def __init__(self, thread_id, masquerade_address="", listen_address="127.0.0.1",port=2048, log_level="DEBUG", bucket_endpoints="", internal=None):
+    def __init__(self, thread_id, masquerade_address="", listen_address="127.0.0.1",port=2048, log_level="DEBUG", bucket_endpoints="", internal=None, passive_ports=None):
         threading.Thread.__init__(self)
         self.thread_id = thread_id
         self.masquerade_address = masquerade_address
@@ -23,11 +23,10 @@ class myThread(threading.Thread):
         self.log_level = log_level
         self.bucket_endpoints = bucket_endpoints
         self.internal = internal
+        self.passive_ports = passive_ports
 
     def run(self):
-        print "starting "
-        ftpserver.start_ftp(self.masquerade_address, self.listen_address, self.port, self.log_level, self.bucket_endpoints, self.internal)
-        print "ending"
+        ftpserver.start_ftp(self.masquerade_address, self.listen_address, self.port, self.log_level, self.bucket_endpoints, self.internal, self.passive_ports)
 
 def get_value_from_config(section, option):
     value = ""

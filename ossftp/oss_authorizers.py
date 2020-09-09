@@ -2,11 +2,19 @@
 import os, sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', '1.0'))
-lib = os.path.abspath( os.path.join(python_path, 'lib'))
-if lib not in sys.path:
-    sys.path.append(lib)
-
+root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+if sys.platform.startswith("linux"):
+    python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib"))
+    sys.path.append(python_lib_path)
+elif sys.platform == "darwin":
+    python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib"))
+    sys.path.append(python_lib_path)
+    extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjc"
+    sys.path.append(extra_lib)
+elif sys.platform == "win32":
+    pass
+else:
+    raise RuntimeError("detect platform fail:%s" % sys.platform)
 
 import time
 import logging
@@ -23,7 +31,7 @@ class BucketLoginInfo():
         self.bucket_name = bucket_name
         self.endpoint = endpoint
         self.access_key = {access_key_id:access_key_secret}
-        self.expire_time = time.time() + 60 
+        self.expire_time = time.time() + 60
 
     def update_access_key(self, access_key_id, access_key_secret):
         self.access_key[access_key_id] = access_key_secret
@@ -105,15 +113,23 @@ class OssAuthorizer(DummyAuthorizer):
         return internal_endpoint
 
     def oss_check(self, bucket_name, default_endpoint, access_key_id, access_key_secret):
+        # 1. when specify bucket endpoints
         if bucket_name in self.bucket_endpoints:
             endpoint = self.bucket_endpoints[bucket_name]
             try:
                 bucket = oss2.Bucket(oss2.Auth(access_key_id, access_key_secret), endpoint, bucket_name, connect_timeout=5.0, app_name=defaults.app_name)
-                res = bucket.get_bucket_acl()
+                faked_obj_name = "test-faked-objname-to-check-ak-if-right"
+                res = bucket.get_object(faked_obj_name)
+            except oss2.exceptions.NoSuchKey as e:
+                pass
+            except oss2.exceptions.AccessDenied as e:
+                raise AuthenticationFailed("get random object was denied, check your access_key/access_id.request_id:%s, status:%s, code:%s, message:%s"% (e.request_id, unicode(e.status), e.code, e.message))
             except oss2.exceptions.OssError as e:
                 raise AuthenticationFailed("access bucket:%s using specified \
                         endpoint:%s failed. request_id:%s, status:%s, code:%s, message:%s" % (bucket_name, endpoint, e.request_id, unicode(e.status), e.code, e.message))
             return endpoint 
+        
+        # 2. when not specify bucket endpoints
         try:
             service = oss2.Service(oss2.Auth(access_key_id, access_key_secret), default_endpoint, app_name=defaults.app_name)
             res = service.list_buckets(prefix=bucket_name)
@@ -121,7 +137,8 @@ class OssAuthorizer(DummyAuthorizer):
             raise AuthenticationFailed("can't list buckets, check your access_key.request_id:%s, status:%s, code:%s, message:%s"% (e.request_id, unicode(e.status), e.code, e.message))
         except oss2.exceptions.OssError as e:
             raise AuthenticationFailed("list buckets error. request_id:%s, status:%s, code:%s, message:%s" % (e.request_id, unicode(e.status), e.code, e.message))
-
+        
+        # 3. internal_endpoint or public_endpoint
         bucket_list = res.buckets
         for bucket in bucket_list:
             if bucket.name == bucket_name:

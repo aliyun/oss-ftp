@@ -3,6 +3,7 @@
     "launcher":{
       "auto_start":0,
       "control_port":8192,
+      "language":"cn",
       "popup_webui":1,
       "show_systray":1
     },

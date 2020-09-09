@@ -1,4 +1,4 @@
-__version__ = '1.0.1'
+__version__ = '1.0.3'
 
 from .oss_authorizers import OssAuthorizer
 from .oss_file_operation import OssFileOperation

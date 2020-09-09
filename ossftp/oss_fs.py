@@ -47,6 +47,10 @@ class OssFS(AbstractedFS):
         assert isinstance(path, unicode), path
         self.oss_fs_impl.mkdir(path)
         
+    def infopath(self, path):
+        assert isinstance(path, unicode), path
+        self.oss_fs_impl.infopath(path)
+    
     def listdir(self, path):
         assert isinstance(path, unicode), path
         return self.oss_fs_impl.listdir(path)
@@ -144,7 +148,7 @@ class OssFS(AbstractedFS):
                                                        size, mtimestr, basename.rstrip('/'))
             yield line.encode('utf8', self.cmd_channel.unicode_errors)
     
-    def format_mlsx(self, basedir, listing, perms, facts, ingore_err=True):
+    def format_mlsx(self, basedir, listing, perms, facts, ignore_err=True):
         assert isinstance(basedir, unicode), basedir
         if listing:
             assert isinstance(listing[0][0], unicode)
