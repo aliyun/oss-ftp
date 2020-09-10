@@ -16,6 +16,9 @@ class OssFS(AbstractedFS):
         assert isinstance(root, unicode), root
         AbstractedFS.__init__(self, root, cmd_channel)
         bucket_name = root.strip('/')
+        if bucket_name.find('/') > -1:
+            index = bucket_name.find('/')
+            bucket_name = bucket_name[:index]
         bucket_info = cmd_channel.authorizer.get_bucket_info(bucket_name)
         access_key_id, access_key_secret= bucket_info.access_key.items()[0]
         endpoint = bucket_info.endpoint

@@ -62,7 +62,7 @@ This will start an FTP server at the 127.0.0.1:2048 port.
 
 You can also specify the listening address and port among other information in parameters at the startup.
 ```bash
-python ftpserver.py --listen_address=<ip address> --port=<your local port> --internal=<True/False> --loglevel=<DEBUG/INFO>
+python ftpserver.py --listen_address=<ip address> --port=<your local port> --passive_ports_start=<your passive ports start> --passive_ports_end=<your passive ports end> --internal=<True/False> --loglevel=<DEBUG/INFO>
 ```
 If the internal value is "True", the FTP server will access the OSS through the intranet domain name.
 If the internal value is "False", the FTP server will access the OSS through the internet domain name.
@@ -114,6 +114,14 @@ Enter the following command in the terminal where you want to run start.sh, and 
 ```bash
 $ export LC_ALL=en_US.UTF-8; export LANG="en_US.UTF-8"; locale
 ```
+**3. If the FTP server has already started, but ftp client cannot connect it.
+
+> - First, ensure the FTP server is start success, you can use Telnet command to test it.
+```bash
+telnet 127.0.0.1 2048
+```
+> - If the FTP server has started successfully, but ftp client cannot connect it yet, first considering the passive ports is forbidden by the firewall, maybe you need add it to the whitelist.
+
 
 ## Run test
 Enter the *test* directory and configure test.cfg. Then run {login.py, file.py, dir.py} with Python to run the OSS FTP-related tests.
