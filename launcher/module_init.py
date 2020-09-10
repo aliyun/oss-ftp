@@ -38,6 +38,8 @@ def start(module):
             masquerade_address = config.get(["modules", "ossftp", "masquerade_address"], "")
             address = config.get(["modules", "ossftp", "address"], "127.0.0.1")
             port = config.get(["modules", "ossftp", "port"], 2048)
+            passive_ports_start = config.get(["modules", "ossftp", "passive_ports_start"], 51000)
+            passive_ports_end = config.get(["modules", "ossftp", "passive_ports_end"], 53000)
             is_internal = config.get(["modules", "ossftp", "internal"], None)
             log_level = config.get(["modules", "ossftp", "log_level"], "INFO")
             bucket_endpoints = config.get(["modules", "ossftp", "bucket_endpoints"], "")
@@ -45,7 +47,8 @@ def start(module):
             if not os.path.isfile(script_path):
                 launcher_log.critical("start module script not exist:%s", script_path)
                 return "fail"
-            cmd = [sys.executable, script_path, "--listen_address=%s"%address, "--port=%d"%port, "--loglevel=%s"%log_level, "--bucket_endpoints=%s"%bucket_endpoints]
+            cmd = [sys.executable, script_path, "--listen_address=%s"%address, "--port=%d"%port, "--passive_ports_start=%d"%passive_ports_start,
+                "--passive_ports_end=%d"%passive_ports_end,"--loglevel=%s"%log_level, "--bucket_endpoints=%s"%bucket_endpoints]
             print cmd
             proc_handler[module]["proc"] = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             #t = FTPd(masquerade_address, address, port, bucket_endpoints, is_internal, log_level)

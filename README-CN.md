@@ -62,7 +62,7 @@ $ python ftpserver.py
 
 启动时也可以通过参数指定监听地址和端口等信息
 ```bash
-python ftpserver.py --listen_address=<ip address> --port=<your local port> --internal=<True/False> --loglevel=<DEBUG/INFO>
+python ftpserver.py --listen_address=<ip address> --port=<your local port> --passive_ports_start=<your passive ports start> --passive_ports_end=<your passive ports end> --internal=<True/False> --loglevel=<DEBUG/INFO>
 ```
 如果 internal为"True", FTP server将通过内网域名访问OSS.
 如果 internal为"False", FTP server通过公网域名访问OSS.
@@ -107,6 +107,13 @@ b. 所用的access_key信息为ram 子账户的access_key，而子账户不具�
 2. 如果你在Linux下运行FTP server，然后用FileZilla连接时遇到如下错误:
 
 > - 501 can't decode path (server filesystem encoding is ANSI_X3.4-1968)
+
+3. 如果OSS-FTP服务已经启动，但是客户端连接失败：
+> - 首先测试服务是否启动成功，可以使用telnet命令进行测试。
+```bash
+telnet 127.0.0.1 2048
+```
+> - 如果确保服务已成功启动，但是客户端列举文件失败，首先考虑FTP server的被动端口是否添加到了防火墙白名单。
 
 一般是因为本地的中文编码有问题。
 在将要运行start.sh的终端中输入下面的命令，然后再重新启动即可

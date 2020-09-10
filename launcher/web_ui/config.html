@@ -37,6 +37,24 @@
 			</div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
 
+		<div class="row-fluid">
+			<div class="span4">
+				<label for="ossftp-passive-ports-start">ossftp 被动端口范围起始端口（重启生效）</label>
+			</div> <!-- .span4 -->
+			<div class="span8">
+				<input id="ossftp-passive-ports-start" type="text" placeholder="默认起始端口为51000"/>
+			</div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+
+		<div class="row-fluid">
+			<div class="span4">
+				<label for="ossftp-passive-ports-end">ossftp 被动端口范围终止端口（重启生效）</label>
+			</div> <!-- .span4 -->
+			<div class="span8">
+				<input id="ossftp-passive-ports-end" type="text" placeholder="默认终止端口为53000"/>
+			</div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+
         <div class="row-fluid">
 			<div class="span4">
 				<label for="ossftp-loglevel">ossftp 日志等级（DEBUG，INFO，WARNING，ERROR，CRITICAL。重启生效）</label>
@@ -130,6 +148,12 @@
                 if ( result['ossftp_port'] != 0) {
                     $( '#ossftp-port').val(result['ossftp_port'])
                 }
+                if ( result['passive_ports_start'] != 0) {
+                    $( '#ossftp-passive-ports-start').val(result['passive_ports_start'])
+                }
+                if ( result['passive_ports_end'] != 0) {
+                    $( '#ossftp-passive-ports-end').val(result['passive_ports_end'])
+                }
                 if ( result['ossftp_loglevel'] != '') {
                     $( '#ossftp-loglevel').val(result['ossftp_loglevel'])
                 }
@@ -200,6 +224,8 @@
             'show_systray':$('#show-systray').is(':checked') ? 1:0,
             'ossftp_address':$('#ossftp-address').val(),
             'ossftp_port':$('#ossftp-port').val(),
+            'passive_ports_start':$('#ossftp-passive-ports-start').val(),
+            'passive_ports_end':$('#ossftp-passive-ports-end').val(),
             'ossftp_loglevel':$('#ossftp-loglevel').val(),
             'ossftp_bucketendpoints':$('#ossftp-bucketendpoints').val(),
             'language':$('#language').val()

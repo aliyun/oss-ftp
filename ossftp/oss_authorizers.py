@@ -3,6 +3,9 @@ import os, sys
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+if root_path not in sys.path:
+    sys.path.append(root_path)
+
 if sys.platform.startswith("linux"):
     python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib"))
     sys.path.append(python_lib_path)
@@ -25,6 +28,8 @@ from pyftpdlib.authorizers import AuthorizerError
 import oss2
 
 import defaults
+from launcher import config
+from launcher.config import ACCESS_ID, ACCESS_SECRET, BUCKET_NAME, HOME_DIR
 
 class BucketLoginInfo():
     def __init__(self, bucket_name, access_key_id, access_key_secret, endpoint):
@@ -40,6 +45,11 @@ class BucketLoginInfo():
     def expired(self):
         return self.expire_time < time.time()
 
+class UserInfo():
+    def __init__(self, bucket_name, home_dir):
+        self.bucket_name = bucket_name
+        self.home_dir = home_dir
+
 class OssAuthorizer(DummyAuthorizer):
     read_perms = u"elr"
     write_perms = u"adfmwM"
@@ -53,6 +63,7 @@ class OssAuthorizer(DummyAuthorizer):
         self.expire_time_interval = 60
         self.internal = None
         self.bucket_endpoints = {}
+        self.user_info_table = {}
 
     def parse_username(self, username):
         if len(username) == 0:
@@ -165,8 +176,20 @@ class OssAuthorizer(DummyAuthorizer):
         password don't match the stored credentials, else return
         None.
         """
-        bucket_name, access_key_id = self.parse_username(username)
-        access_key_secret = password
+        account_info = config.get_account_info(username, password)
+        bucket_name = None
+        access_key_id = None
+        access_key_secret = None
+        if account_info is None:
+            bucket_name, access_key_id = self.parse_username(username)
+            access_key_secret = password
+        else:
+            access_key_id = account_info[ACCESS_ID]
+            access_key_secret = account_info[ACCESS_SECRET]
+            bucket_name = account_info[BUCKET_NAME]
+            home_dir = account_info[HOME_DIR].strip('/')
+            user_info = UserInfo(bucket_name, home_dir)
+            self.user_info_table[username] = user_info
         res = self.local_check(bucket_name, access_key_id, access_key_secret)
         if res == self.LOCAL_CHECK_OK:
             return
@@ -179,10 +202,16 @@ class OssAuthorizer(DummyAuthorizer):
         AuthenticationFailed can be freely raised by subclasses in case
         the provided username no longer exists.
         """
-        bucket_name, access_key_id = self.parse_username(username)
-        bucket_name = bucket_name.strip('/')
-        bucket_name = '/' + bucket_name + '/'
-        return bucket_name 
+        user_info = self.user_info_table.get(username)
+        if user_info:
+            if user_info.home_dir:
+                return '/' + user_info.bucket_name + '/' + user_info.home_dir + '/'
+            else:
+                return '/' + user_info.bucket_name + '/'
+        else:
+            bucket_name, access_key_id = self.parse_username(username)
+            bucket_name = bucket_name.strip('/')
+            return '/' + bucket_name + '/'
 
     def impersonate_user(self, username, password):
         """Impersonate another user (noop).
@@ -217,12 +246,22 @@ class OssAuthorizer(DummyAuthorizer):
 
     def get_msg_login(self, username):
         """Return the user's login message."""
-        bucket_name, access_key_id = self.parse_username(username)
-        msg = u"login to bucket: %s with access_key_id: %s" % (bucket_name, access_key_id)
-        return msg 
+        msg = None
+        if self.user_info_table.get(username):
+            bucket_name = self.user_info_table.get(username).bucket_name
+            msg = u"login to bucket: %s with login username: %s" % (bucket_name, username)
+        else:
+            bucket_name, access_key_id = self.parse_username(username)
+            msg = u"login to bucket: %s with access_key_id: %s" % (bucket_name, access_key_id)
+        return msg
 
     def get_msg_quit(self, username):
         """Return the user's quitting message."""
-        bucket_name, access_key_id = self.parse_username(username)
-        msg = u"logout of bucket: %s with access_key_id: %s" % (bucket_name, access_key_id)
-        return msg 
+        msg = None
+        if self.user_info_table.get(username):
+            bucket_name = self.user_info_table.get(username).bucket_name
+            msg = u"logout of bucket: %s with login username: %s" % (bucket_name, username)
+        else:
+            bucket_name, access_key_id = self.parse_username(username)
+            msg = u"logout of bucket: %s with access_key_id: %s" % (bucket_name, access_key_id)
+        return msg

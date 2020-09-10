@@ -12,6 +12,13 @@ root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 data_path = os.path.join(root_path, 'data')
 config_path = os.path.join(root_path, 'config.json')
 
+LOGIN_USERNAME = "login_username"
+LOGIN_PASSWORD = "login_password"
+ACCESS_ID = "access_id"
+ACCESS_SECRET = "access_secret"
+BUCKET_NAME = "bucket_name"
+HOME_DIR = "home_dir"
+
 config = {}
 def load():
     global config, config_path
@@ -76,6 +83,21 @@ def recheck_module_path():
         need_save_config = True
         set(["modules", "launcher", "language"], "cn")
 
+
+
+    accounts = get(["modules", "accounts"], [])
+    if len(accounts) == 0:
+        account = {}
+        account[LOGIN_USERNAME] = ''
+        account[LOGIN_PASSWORD] = ''
+        account[ACCESS_ID] = ''
+        account[ACCESS_SECRET] = ''
+        account[BUCKET_NAME] = ''
+        account[HOME_DIR] = ''
+        accounts.append(account)
+        need_save_config = True
+        set(["modules", "accounts"], accounts)
+
     return need_save_config
 
 def create_data_path():
@@ -90,6 +112,19 @@ def create_data_path():
     if not os.path.isdir(data_ossftp_path):
         os.mkdir(data_ossftp_path)
 
+
+def get_account_info(login_username, login_password):
+    if login_username is None or login_username == "":
+        return None
+
+    global config
+    account_list = config['modules']['accounts']
+    for item in account_list:
+        if login_username == item['login_username'] and login_password == item['login_password']:
+            return item
+
+    return None
+
 def main():
     create_data_path()
     if os.path.isfile(config_path):
@@ -100,18 +135,3 @@ def main():
 
 main()
 
-def test():
-    load()
-    val = get(["web_ui", "popup_webui"], 0)
-    print val
-
-def test2():
-    set(["web_ui", "popup_webui"], 0)
-    set(["web_ui", "popup"], 0)
-    print config
-
-if __name__ == "__main__":
-    test2()
-    #main()
-    #a = eval('2*3')
-    #eval("conf = {}")
