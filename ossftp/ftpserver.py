@@ -101,8 +101,8 @@ def main(args, opts):
     log_level = "DEBUG"
     bucket_endpoints = ""
     internal = None
-    passive_ports_start = None
-    passive_ports_end = None
+    passive_ports_start = 51000
+    passive_ports_end = 53000
     passive_ports = None
     if opts.masquerade_address:
         masquerade_address = opts.masquerade_address
@@ -153,7 +153,7 @@ def main(args, opts):
             exit(1)
         passive_ports = range(passive_ports_start, passive_ports_end) 
     start_ftp(masquerade_address, listen_address, port, log_level, bucket_endpoints, internal, passive_ports)
-    
+
 if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option("", "--masquerade_address", dest="masquerade_address", help="the ip that will reply to FTP Client, then client will send data request to this address.")

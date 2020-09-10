@@ -257,7 +257,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if reqs['cmd'] == ['get_config']:
             config.load()
-            data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d, "language": "%s", "ossftp_address": "%s", "ossftp_port": %d, "ossftp_loglevel": "%s", "ossftp_bucketendpoints": "%s" }' %\
+            data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d, "language": "%s", "ossftp_address": "%s", "ossftp_port": %d, "ossftp_loglevel": "%s", "ossftp_bucketendpoints": "%s", "passive_ports_start":%d, "passive_ports_end":%d}' %\
                    (config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
@@ -265,7 +265,9 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     , config.get(["modules", "ossftp", "address"], '127.0.0.1')
                     , config.get(["modules", "ossftp", "port"], 2048)
                     , config.get(["modules", "ossftp", "log_level"], 'INFO')
-                    , config.get(["modules", "ossftp", "bucket_endpoints"], ''))
+                    , config.get(["modules", "ossftp", "bucket_endpoints"], '')
+                    , config.get(["modules", "ossftp", "passive_ports_start"], 51000)
+                    , config.get(["modules", "ossftp", "passive_ports_end"], 53000))
         elif reqs['cmd'] == ['set_config']:
             success = True
             popup_webui = config.get(["modules", "launcher", "popup_webui"], 1)
@@ -276,6 +278,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             ossftp_port = config.get(["modules", "ossftp", "port"], 2048)
             ossftp_loglevel = config.get(["modules", "ossftp", "log_level"], 'INFO')
             ossftp_bucketendpoints = config.get(["modules", "ossftp", "bucket_endpoints"], '')
+            passive_ports_start = config.get(["modules", "ossftp", "passive_ports_start"], 51000)
+            passive_ports_end = config.get(["modules", "ossftp", "passive_ports_end"], 53000)
             data = '{"res":"fail"}'
             if success and 'language' in reqs :
                 language = reqs['language'][0]
@@ -301,13 +305,13 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 ossftp_address = reqs['ossftp_address'][0].strip()
                 if not self.ip_check(ossftp_address):
                     success = False
-                    data = '{"res":"fail, ilegal ossftp address: %s"}' % ossftp_address
+                    data = '{"res":"fail, illegal ossftp address: %s"}' % ossftp_address
  
             if success and 'ossftp_port' in reqs:
                 ossftp_port = int(reqs['ossftp_port'][0])
                 if ossftp_port < 0:
                     success = False
-                    data = '{"res":"fail, ilegal ossftp port: %d"}' % ossftp_port
+                    data = '{"res":"fail, illegal ossftp port: %d"}' % ossftp_port
             if success and 'ossftp_loglevel' in reqs:
                 ossftp_loglevel = reqs['ossftp_loglevel'][0].strip().upper()
                 if (ossftp_loglevel not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']):
@@ -315,6 +319,16 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     data = '{"res":"fail, illegal ossftp log level: %s. Must be: DEBUG, INFO, WARNING, ERROR, CRITICAL"}' % ossftp_loglevel
             if success and 'ossftp_bucketendpoints' in reqs:
                 ossftp_bucketendpoints = reqs['ossftp_bucketendpoints'][0].strip()
+            if success and 'passive_ports_start' in reqs:
+                passive_ports_start = int(reqs['passive_ports_start'][0])
+                if passive_ports_end < 0:
+                    success = False
+                    data = '{"res":"fail, illegal ossftp passive_ports_start: %d"}' % passive_ports_start
+            if success and 'passive_ports_end' in reqs:
+                passive_ports_end = int(reqs['passive_ports_end'][0])
+                if passive_ports_end < 0:
+                    success = False
+                    data = '{"res":"fail, illegal ossftp passive_ports_end: %d"}' % passive_ports_end
                 
             if success:
                 config.set(["modules", "launcher", "popup_webui"], popup_webui)
@@ -325,13 +339,19 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 config.set(["modules", "ossftp", "port"], ossftp_port)
                 config.set(["modules", "ossftp", "log_level"], ossftp_loglevel)
                 config.set(["modules", "ossftp", "bucket_endpoints"], ossftp_bucketendpoints)
+                config.set(["modules", "ossftp", "passive_ports_start"], passive_ports_start)
+                config.set(["modules", "ossftp", "passive_ports_end"], passive_ports_end)
                 config.save()
                 if auto_start:
                     autorun.enable()
                 else:
                     autorun.disable()
                 data = '{"res":"success"}'
-                launcher_log.info('Set config: %s', json.dumps(config.config, sort_keys=True, separators=(',',':'), indent=2))
+
+                import copy
+                tmp_config = copy.deepcopy(config.config.copy())
+                del tmp_config['modules']['accounts']
+                launcher_log.info('Set config: %s', json.dumps(tmp_config, sort_keys=True, separators=(',', ':'), indent=2))
             else:
                 launcher_log.error(data)
 
