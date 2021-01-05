@@ -77,7 +77,7 @@ We recommend you use [FileZilla Client]((https://filezilla-project.org/)) to con
 
 - Host:  127.0.0.1.
 - Logon type:  Normal. 
-- User: access_key_id/bucket_name (Note: Here the "/" is necessary. It does not mean "or". For example, the user name 'tSxyiUM3NKswPMEp/test-hz-jh-002'). 
+- User: access_key_id/bucket_name (Note: Here the "/" is necessary. It does not mean "or". For example, the user name 'tSxyiUM3NK1234546/test-bucket-name'). 
 - Password: access_key_secret. 
 
 ## Possible problems

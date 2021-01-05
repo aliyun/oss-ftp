@@ -77,7 +77,7 @@ loglevel决定了ftpserver的日志级别, DEBUG级别输出的日志信息会�
 
 - 主机: 127.0.0.1
 - 登录类型： 正常
-- 用户：access_key_id/bucket_name (注意： 这里的/是必须的，不是‘或’的意思，如用户名'tSxyiUM3NKswPMEp/test-hz-jh-002')
+- 用户：access_key_id/bucket_name (注意： 这里的/是必须的，不是‘或’的意思，如用户名'tSxyiUM3NK1234546/test-bucket-name')
 - 密码：access_key_secret
 
 ## 可能遇到的问题
