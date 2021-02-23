@@ -40,7 +40,7 @@ class Gtk_tray():
     def make_menu(self):
         menu = gtk.Menu()
         itemlist = [(u'Config', self.on_show),
-                    ('Restart OSS-FTP', self.on_restart_ossftp),
+                    ('Restart OSS-FTP/SFTP', self.on_restart_ossftp),
                     (u'Quit', self.on_quit)]
         for text, callback in itemlist:
             item = gtk.MenuItem(text)

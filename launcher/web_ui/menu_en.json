@@ -1,6 +1,6 @@
 {
     "menu_sort_id":1,
-        "module_title":"OSS-FTP",
+        "module_title":"OSS-FTP/SFTP",
         "sub_menus":{
             "1":{
                 "title":"Config",

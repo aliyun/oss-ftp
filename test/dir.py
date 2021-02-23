@@ -1,19 +1,11 @@
 # -*- coding:utf-8 -*-
-import os, sys
 
-current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath( os.path.join(current_path, os.pardir))
-sys.path.append(root_path)
-
-import threading
+from util import *
 import unittest
 import time
 from socket import error as sock_error
-
 from ftplib import FTP, FTP_TLS,error_temp, error_perm
-from ossftp import ftpserver
 
-from util import *
 
 class DirTest(unittest.TestCase):
 
@@ -30,7 +22,8 @@ class DirTest(unittest.TestCase):
         self.ftp.quit()
 
     def test_mk_dir(self):
-        dir_name_list = [unicode(time.time()), '中文目录', '中文目录测试!@@#)(*&^%$__＊（＊&……&＊', '__测试 这是目录 !qwer1234', '测试目录1层\测试目录2层']
+        dir_name_list = [str(time.time()), '中文目录', '中文目录测试!@@#)(*&^%$__＊（＊&……&＊', '__测试 这是目录 !qwer1234', '测试目录1层\测试目录2层']
+        # dir_name_list = [str(time.time()), 'test-dir', 'test-dir-2/sub-dir']
         for dir_name in dir_name_list:
             try:
                 self.ftp.mkd(dir_name)
@@ -42,7 +35,7 @@ class DirTest(unittest.TestCase):
 
     def test_cwd_dir(self):
         try:
-            dir_name = self.ftp.pwd() 
+            dir_name = self.ftp.pwd()
             data = []
             self.ftp.dir(data.append)
             for line in data:
@@ -63,17 +56,17 @@ class DirTest(unittest.TestCase):
             self.fail("cwd dir error")
 
     def test_list_dir(self):
-        test_dir_name = unicode(time.time())
+        test_dir_name = str(time.time())
         try:
             self.ftp.mkd(test_dir_name)
             self.ftp.cwd(test_dir_name)
-            file_1 = "file_1" + unicode(time.time())
+            file_1 = "file_1" + str(time.time())
             gen_file(file_1, 1024)
             self.ftp.storbinary("STOR %s" % file_1, open(file_1))
-            file_2 = "file_2" + unicode(time.time())
+            file_2 = "file_2" + str(time.time())
             gen_file(file_2, 1024)
             self.ftp.storbinary("STOR %s" % file_2, open(file_2))
-            tmp_dir = "tmp_dir" + unicode(time.time())
+            tmp_dir = "tmp_dir" + str(time.time())
             self.ftp.mkd(tmp_dir)
             data = []
             self.ftp.dir(data.append)
@@ -94,7 +87,7 @@ class DirTest(unittest.TestCase):
             self.ftp.rmd(test_dir_name)
         except (error_temp, error_perm, sock_error):
             self.fail("list dir error")
-        
+
         safe_remove_file(file_1)
         safe_remove_file(file_2)
 
@@ -107,7 +100,7 @@ class DirTest(unittest.TestCase):
             self.fail("list dir error")
 
     def test_rm_dir(self):
-        test_dir_name = unicode(time.time())
+        test_dir_name = str(time.time())
         try:
             self.ftp.mkd(test_dir_name)
             self.ftp.cwd(test_dir_name)
@@ -115,7 +108,7 @@ class DirTest(unittest.TestCase):
             self.ftp.rmd(test_dir_name)
         except (error_temp, error_perm, sock_error):
             self.fail("rm dir error")
-        
+
         try:
             self.ftp.cwd(test_dir_name)
             self.fail("rmd dir error")
@@ -123,7 +116,7 @@ class DirTest(unittest.TestCase):
             pass
 
     def test_rename_dir(self):
-        test_dir_name = unicode(time.time())
+        test_dir_name = str(time.time())
         test_dir_name_to = test_dir_name + "_to"
         try:
             self.ftp.mkd(test_dir_name)
@@ -134,7 +127,8 @@ class DirTest(unittest.TestCase):
         else:
             self.fail("check rename failed")
 
-if __name__ == '__main__':
+if __name__ == '__main__' or __name__.endswith('dir'):
+    print('\n\nstart test %s' % __file__)
     t = myThread("thread_id_1")
     t.daemon = True
     t.start()

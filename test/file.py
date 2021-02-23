@@ -1,20 +1,11 @@
 # -*- coding: utf-8 -*-
-import os, sys
-
-current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath( os.path.join(current_path, os.pardir))
-sys.path.append(root_path)
-
-import threading
-import time
-import uuid
-import unittest
-from socket import error as sock_error
-
-from ftplib import FTP, FTP_TLS, error_temp, error_perm
-from ossftp import ftpserver
 
 from util import *
+import time
+import unittest
+from socket import error as sock_error
+from ftplib import FTP, FTP_TLS, error_temp, error_perm
+
 
 class FileTest(unittest.TestCase):
 
@@ -38,14 +29,14 @@ class FileTest(unittest.TestCase):
         for size in size_list:
             gen_file(up_file, size)
             _md5_up = get_file_md5(up_file)
-            path = unicode(time.time())
+            path = str(time.time())
             self.assertTrue(storebinary(self.ftp, up_file, path))
 
             self.assertTrue(retrbinary(self.ftp, path, down_file))
-            _md5_down = get_file_md5(down_file) 
+            _md5_down = get_file_md5(down_file)
             self.assertEqual(_md5_up, _md5_down)
             self.assertTrue(delete_file(self.ftp, path))
-        
+
         safe_remove_file(up_file)
         safe_remove_file(down_file)
 
@@ -53,9 +44,9 @@ class FileTest(unittest.TestCase):
         up_file = "up_file"
         size = 1024
         gen_file(up_file, size)
-        path = unicode(time.time())
+        path = str(time.time())
         self.assertTrue(storebinary(self.ftp, up_file, path))
-        curr_size = get_size(self.ftp, path) 
+        curr_size = get_size(self.ftp, path)
         self.assertEqual(size, curr_size)
         self.assertTrue(delete_file(self.ftp, path))
 
@@ -65,7 +56,7 @@ class FileTest(unittest.TestCase):
         up_file = "up_file"
         size = 1024
         gen_file(up_file, size)
-        path = unicode(time.time())
+        path = str(time.time())
         self.assertTrue(storebinary(self.ftp, up_file, path))
 
         try:
@@ -75,14 +66,14 @@ class FileTest(unittest.TestCase):
         else:
             self.fail("test_rename failed")
         self.assertTrue(delete_file(self.ftp, path))
-       
+
         safe_remove_file(up_file)
 
     def test_chmod(self):
         up_file = "up_file"
         size = 1024
         gen_file(up_file, size)
-        path = unicode(time.time())
+        path = str(time.time())
         self.assertTrue(storebinary(self.ftp, up_file, path))
 
         try:
@@ -97,17 +88,18 @@ class FileTest(unittest.TestCase):
         up_file = "up_file"
         size = 1024
         gen_file(up_file, size)
-        path = unicode(time.time())
+        path = str(time.time())
         self.assertTrue(storebinary(self.ftp, up_file, path))
         try:
             self.ftp.sendcmd('MDTM %s' % path)
         except (error_temp, error_perm, sock_error) as e:
-            print e
+            print(e)
             self.fail("test_get_mtime failed")
         self.assertTrue(delete_file(self.ftp, path))
 
     def test_file_name(self):
         file_name_list = ['中文', 'prefix_*&^% $#@!)(:?>', '中文1234&＊…………％＊&……＊&&％&……％&％＊&（！']
+        # file_name_list = ['123', 'prefix_*', '1234*']
         up_file = "up_file"
         gen_file(up_file, 4*1024)
         _md5_up = get_file_md5(up_file)
@@ -115,7 +107,7 @@ class FileTest(unittest.TestCase):
         for name in file_name_list:
             self.assertTrue(storebinary(self.ftp, up_file, name))
             self.assertTrue(retrbinary(self.ftp, name, down_file))
-            _md5_down = get_file_md5(down_file) 
+            _md5_down = get_file_md5(down_file)
             self.assertEqual(_md5_up, _md5_down)
             self.assertTrue(delete_file(self.ftp, name))
 
@@ -126,17 +118,20 @@ class FileTest(unittest.TestCase):
         up_file = "up_file"
         size = 1024
         gen_file(up_file, size)
-        path = unicode(time.time())
+        test_dir = "test-dir"
+        path = test_dir + '/' + str(time.time())
         self.assertTrue(storebinary(self.ftp, up_file, path))
-        data = []
         try:
-            self.ftp.sendcmd('LIST %s' % path, )
+            self.ftp.sendcmd('LIST %s' % test_dir)
         except (error_temp, error_perm, sock_error) as e:
-            print e
+            print(e)
             self.fail("test_list_file failed")
-        self.assertTrue(delete_file(self.ftp, path))
+        finally:
+            safe_remove_file(up_file)
+            self.assertTrue(delete_file(self.ftp, path))
  
 if __name__ == '__main__':
+    print('\n\nstart test %s' % __file__)
     t = myThread("thread_id_1")
     t.daemon = True
     t.start()

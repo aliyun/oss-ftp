@@ -6,6 +6,7 @@ import types
 from pyftpdlib.filesystems import FilesystemError
 import oss2
 from oss2.exceptions import *
+from oss2 import to_unicode
 
 import defaults
 
@@ -48,8 +49,8 @@ class OssFileOperation:
         self.dir_cache = dir_cache
         self.expire_time = 10
 
-        self.buf = ''
-        self.buflimit = defaults.send_data_buff_size
+        self.buf = b''
+        self.buflimit = defaults.get_data_buff_size()
         self.closed = False
         self.name = self.bucket.bucket_name + '/' + self.key
         self.upload_id = None
@@ -82,7 +83,7 @@ class OssFileOperation:
             return
         self.part_num += 1
         res = self.upload_part()
-        self.buf = ''
+        self.buf = b''
         self.part_list.append(oss2.models.PartInfo(self.part_num, res.etag))
        
     def write(self, data):
@@ -123,13 +124,13 @@ class OssFileOperation:
                 self.key_list.append(key_info)
         self.contents = []
         for entry in self.key_list:
-            to_add = entry.key.decode('utf-8')[len(key):]
+            to_add = to_unicode(entry.key)[len(key):]
             last_modified = entry.last_modified
             last_modified_str = datetime.datetime.utcfromtimestamp(last_modified).strftime('%Y/%m/%d %H:%M:%S')
-            self.contents.append((to_add, entry.size, last_modified_str.decode('utf-8')))
+            self.contents.append((to_add, entry.size, to_unicode(last_modified_str)))
             self.cache_set(self.size_cache, (self.bucket.bucket_name, entry.key), entry.size)
         for entry in self.dir_list:
-            to_add = entry.decode('utf-8')[len(key):]
+            to_add = to_unicode(entry)[len(key):]
             self.contents.append((to_add, -1, 0))
         return self.contents
    
@@ -160,7 +161,7 @@ class OssFileOperation:
         return _is_dir
     
     def cache_get(self, cache, key):
-        if not cache.has_key(key):
+        if key not in cache:
             return None
         if cache[key][1] + self.expire_time >= time.time():
             return cache[key][0]

@@ -5,13 +5,17 @@ from __future__ import with_statement
 import os
 import sys
 import launcher_log
+from oss2.compat import is_py3
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 
 if sys.platform == 'win32':
-    import _winreg
+    if is_py3:
+        import winreg as _winreg
+    else:
+        import _winreg
     _registry = _winreg.ConnectRegistry(None, _winreg.HKEY_CURRENT_USER)
     def get_runonce():
         return _winreg.OpenKey(_registry,
@@ -49,7 +53,7 @@ if sys.platform == 'win32':
     if (os.path.isfile(ossftp_exe)):
         run_cmd = os.path.abspath(ossftp_exe)
     else:
-        run_cmd = "\"" + os.path.abspath( os.path.join(root_path, "python27", "win32", "pythonw.exe")) + "\" \"" +\
+        run_cmd = "\"" + os.path.abspath( os.path.join(root_path, "python36", "win32", "pythonw.exe")) + "\" \"" +\
                   os.path.abspath( os.path.join(root_path, "launcher", "start.py")) + "\""
 elif sys.platform == 'linux' or sys.platform == 'linux2':
     _xdg_config_home = os.environ.get("XDG_CONFIG_HOME", "~/.config")

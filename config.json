@@ -14,16 +14,27 @@
       "auto_start":0,
       "control_port":8192,
       "language":"cn",
+      "oss_protocol":"https",
       "popup_webui":1,
       "show_systray":1
     },
     "ossftp":{
       "address":"127.0.0.1",
       "bucket_endpoints":"",
+      "buff_size":10,
+      "enable":1,
       "log_level":"INFO",
-      "passive_ports_start":51000,
       "passive_ports_end":53000,
+      "passive_ports_start":51000,
       "port":2048
+    },
+    "osssftp":{
+      "address":"127.0.0.1",
+      "bucket_endpoints":"",
+      "buff_size":10,
+      "enable":1,
+      "log_level":"INFO",
+      "port":50000
     }
   }
 }
