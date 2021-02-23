@@ -4,6 +4,7 @@ import oss2
 
 import oss_file_operation
 import defaults
+from common.util import wrap_protocol
 
 class OssFsImpl:
 
@@ -12,8 +13,8 @@ class OssFsImpl:
         self.endpoint = endpoint
         self.access_id = access_id
         self.access_key = access_key
-
-        self.bucket = oss2.Bucket(oss2.Auth(self.access_id, self.access_key), self.endpoint, self.bucket_name, app_name=defaults.app_name)
+        wrap_endpoint = wrap_protocol(self.endpoint, defaults.get_oss_trans_protocol())
+        self.bucket = oss2.Bucket(oss2.Auth(self.access_id, self.access_key), wrap_endpoint, self.bucket_name, app_name=defaults.app_name)
         self.size_cache = {}
         self.dir_cache = {}
 
@@ -52,7 +53,8 @@ class OssFsImpl:
     def get_bucket(self, path):
         path = self.normalize_separate_char(path)
         bucket_name = self.get_oss_bucket_name(path)
-        bucket = oss2.Bucket(oss2.Auth(self.access_id, self.access_key), self.endpoint, bucket_name, app_name=defaults.app_name)
+        wrap_endpoint = wrap_protocol(self.endpoint, defaults.get_oss_trans_protocol())
+        bucket = oss2.Bucket(oss2.Auth(self.access_id, self.access_key), wrap_endpoint, bucket_name, app_name=defaults.app_name)
         return bucket
     
     def get_object(self, path):

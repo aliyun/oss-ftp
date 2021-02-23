@@ -2,20 +2,36 @@
 
 import os, sys
 import re
-import SocketServer, socket, ssl
-import BaseHTTPServer
+import socket, ssl
 import errno
-import urlparse
 import threading
-import urllib2
 import time
 import datetime
 from xlog import LogFileTailer
+from oss2.compat import is_py3, to_unicode, to_bytes
+
+if is_py3:
+    import socketserver as SocketServer
+    import http.server as BaseHTTPServer
+    from urllib.parse import urlparse
+    from urllib.parse import parse_qs
+    from urllib.request import ProxyHandler
+    from urllib.request import build_opener
+else:
+    import SocketServer
+    import BaseHTTPServer
+    from urlparse import urlparse
+    from urlparse import parse_qs
+    import urllib2
+    from urllib2 import ProxyHandler
+    from urllib2 import build_opener
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
 ossftp_log_path = os.path.join(root_path, "data", "ossftp", "ossftp.log")
 ossftp_log_tailer = LogFileTailer(ossftp_log_path)
+osssftp_log_path = os.path.join(root_path, "data", "osssftp", "osssftp.log")
+osssftp_log_tailer = LogFileTailer(osssftp_log_path)
 
 import json
 import launcher_log
@@ -78,11 +94,16 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             menu_path = os.path.join(root_path, module, "web_ui", _menu_file)
             if not os.path.isfile(menu_path):
                 continue
-                
-            module_menu = json.load(file(menu_path, 'r'))          
-            module_menus[module] = module_menu
 
-        module_menus = sorted(module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
+            if is_py3:
+                with open(menu_path, 'r', encoding='utf-8') as f:
+                    module_menu = json.load(f)
+                    module_menus[module] = module_menu
+            else:
+                module_menu = json.load(open(menu_path, 'r'))
+                module_menus[module] = module_menu
+
+        module_menus = sorted(module_menus.items(), key=lambda k_v: (k_v[1]['menu_sort_id']))
         #for k,v in self.module_menus:
         #    logging.debug("m:%s id:%d", k, v['menu_sort_id'])
 
@@ -91,11 +112,11 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def send_response(self, mimetype, data):
         self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
-        self.wfile.write(data)
+        self.wfile.write(to_bytes(data))
     def send_not_found(self):
         self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
     def do_POST(self):
-        #url_path = urlparse.urlparse(self.path).path
+        #url_path = urlparse(self.path).path
         url_path_list = self.path.split('/')
         if len(url_path_list) >= 3 and url_path_list[1] == "module":
             module = url_path_list[2]
@@ -113,7 +134,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
         try:
             refer = self.headers.getheader('Referer')
-            netloc = urlparse.urlparse(refer).netloc
+            netloc = urlparse(refer).netloc
             if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
                 launcher_log.warn("web control ref:%s refuse", netloc)
                 return
@@ -126,7 +147,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             launcher_log.warn('%s %s %s haking', self.address_string(), self.command, self.path )
             return
 
-        url_path = urlparse.urlparse(self.path).path
+        url_path = urlparse(self.path).path
         if url_path == '/':
             return self.req_index_handler()
 
@@ -196,8 +217,9 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Open file fail')
 
     def req_index_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
+
         try:
             target_module = reqs['module'][0]
             target_menu = reqs['menu'][0]
@@ -235,12 +257,12 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         right_content_file = os.path.join(root_path, target_module, "web_ui", target_menu + _html_file_suffix)
         if os.path.isfile(right_content_file):
-            with open(right_content_file, "r") as f:
+            with open(right_content_file, "rb") as f:
                 right_content = f.read()
         else:
             right_content = ""
 
-        data = (index_content.decode('utf-8') % (menu_content, right_content.decode('utf-8') )).encode('utf-8')
+        data = to_bytes(to_unicode(index_content) % (menu_content, to_unicode(right_content)))
         self.send_response('text/html', data)
     
     def ip_check(self, ip_str):
@@ -251,28 +273,41 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             return False
 
     def req_config_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''        
 
         if reqs['cmd'] == ['get_config']:
             config.load()
-            data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d, "language": "%s", "ossftp_address": "%s", "ossftp_port": %d, "ossftp_loglevel": "%s", "ossftp_bucketendpoints": "%s", "passive_ports_start":%d, "passive_ports_end":%d}' %\
+            data = '{ "popup_webui": %d, "show_systray": %d, "auto_start": %d,"oss_protocol": "%s", "language": "%s", "ossftp_address": "%s", "ossftp_port": %d, "ossftp_loglevel": "%s", "ossftp_bucketendpoints": "%s", "passive_ports_start":%d, "passive_ports_end":%d, ' \
+                   '"ossftp_enable":%d, "ossftp_buff_size": %d, ' \
+                   '"oss_sftp_address": "%s", "oss_sftp_port": %d, "oss_sftp_loglevel": "%s", "oss_sftp_bucketendpoints": "%s", ' \
+                   '"oss_sftp_enable":%d, "oss_sftp_buff_size":%d}' %\
                    (config.get(["modules", "launcher", "popup_webui"], 1)
                     , config.get(["modules", "launcher", "show_systray"], 1)
                     , config.get(["modules", "launcher", "auto_start"], 0)
+                    , config.get(["modules", "launcher", "oss_protocol"], 'https')
                     , config.get(["modules", "launcher", "language"], "cn")
                     , config.get(["modules", "ossftp", "address"], '127.0.0.1')
                     , config.get(["modules", "ossftp", "port"], 2048)
                     , config.get(["modules", "ossftp", "log_level"], 'INFO')
                     , config.get(["modules", "ossftp", "bucket_endpoints"], '')
                     , config.get(["modules", "ossftp", "passive_ports_start"], 51000)
-                    , config.get(["modules", "ossftp", "passive_ports_end"], 53000))
+                    , config.get(["modules", "ossftp", "passive_ports_end"], 53000)
+                    , config.get(["modules", "ossftp", "enable"], 0)
+                    , config.get(["modules", "ossftp", "buff_size"], 5)
+                    , config.get(["modules", "osssftp", "address"], '127.0.0.1')
+                    , config.get(["modules", "osssftp", "port"], 50000)
+                    , config.get(["modules", "osssftp", "log_level"], 'INFO')
+                    , config.get(["modules", "osssftp", "bucket_endpoints"], '')
+                    , config.get(["modules", "osssftp", "enable"], 0)
+                    , config.get(["modules", "osssftp", "buff_size"], 5))
         elif reqs['cmd'] == ['set_config']:
             success = True
             popup_webui = config.get(["modules", "launcher", "popup_webui"], 1)
             auto_start = config.get(["modules", "launcher", "auto_start"], 0)
             show_systray = config.get(["modules", "launcher", "show_systray"], 1)
+            oss_protocol = config.get(["modules", "launcher", "oss_protocol"], 'https')
             language = config.get(["modules", "launcher", "language"], "cn")
             ossftp_address = config.get(["modules", "ossftp", "address"], "127.0.0.1")
             ossftp_port = config.get(["modules", "ossftp", "port"], 2048)
@@ -280,6 +315,16 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             ossftp_bucketendpoints = config.get(["modules", "ossftp", "bucket_endpoints"], '')
             passive_ports_start = config.get(["modules", "ossftp", "passive_ports_start"], 51000)
             passive_ports_end = config.get(["modules", "ossftp", "passive_ports_end"], 53000)
+            ossftp_enable = config.get(["modules", "ossftp", "enable"], 0)
+            ossftp_buff_size = config.get(["modules", "ossftp", "buff_size"], 5)
+
+            oss_sftp_address = config.get(["modules", "osssftp", "address"], "127.0.0.1")
+            oss_sftp_port = config.get(["modules", "osssftp", "port"], 50000)
+            oss_sftp_loglevel = config.get(["modules", "osssftp", "log_level"], 'INFO')
+            oss_sftp_bucketendpoints = config.get(["modules", "osssftp", "bucket_endpoints"], '')
+            oss_sftp_enable = config.get(["modules", "osssftp", "enable"], 0)
+            oss_sftp_buff_size = config.get(["modules", "osssftp", "buff_size"], 5)
+
             data = '{"res":"fail"}'
             if success and 'language' in reqs :
                 language = reqs['language'][0]
@@ -301,17 +346,22 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if auto_start != 0 and auto_start != 1:
                     success = False
                     data = '{"res":"fail, auto_start:%s"}' % auto_start
+            if success and 'oss_protocol' in reqs :
+                oss_protocol = reqs['oss_protocol'][0]
+                if oss_protocol not in ['http', 'https']:
+                    success = False
+                    data = '{"res":"fail, oss_protocol set error:%s"}' % oss_protocol
+
             if success and 'ossftp_address' in reqs:
                 ossftp_address = reqs['ossftp_address'][0].strip()
                 if not self.ip_check(ossftp_address):
                     success = False
-                    data = '{"res":"fail, illegal ossftp address: %s"}' % ossftp_address
- 
+                    data = '{"res":"fail, ilegal ossftp address: %s"}' % ossftp_address
             if success and 'ossftp_port' in reqs:
                 ossftp_port = int(reqs['ossftp_port'][0])
                 if ossftp_port < 0:
                     success = False
-                    data = '{"res":"fail, illegal ossftp port: %d"}' % ossftp_port
+                    data = '{"res":"fail, ilegal ossftp port: %d"}' % ossftp_port
             if success and 'ossftp_loglevel' in reqs:
                 ossftp_loglevel = reqs['ossftp_loglevel'][0].strip().upper()
                 if (ossftp_loglevel not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']):
@@ -329,18 +379,66 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 if passive_ports_end < 0:
                     success = False
                     data = '{"res":"fail, illegal ossftp passive_ports_end: %d"}' % passive_ports_end
+            if success and 'ossftp_buff_size' in reqs:
+                ossftp_buff_size = int(reqs['ossftp_buff_size'][0])
+                if ossftp_buff_size < 0:
+                    success = False
+                    data = '{"res":"fail, ilegal ossftp buff_size: %d"}' % ossftp_buff_size
+            if success and 'ossftp_enable' in reqs:
+                ossftp_enable = int(reqs['ossftp_enable'][0])
+                if ossftp_enable != 0 and ossftp_enable != 1:
+                    success = False
+                    data = '{"res":"fail, ossftp_enable:%s"}' % ossftp_enable
+
+            if success and 'oss_sftp_address' in reqs:
+                oss_sftp_address = reqs['oss_sftp_address'][0].strip()
+                if not self.ip_check(oss_sftp_address):
+                    success = False
+                    data = '{"res":"fail, ilegal oss sftp address: %s"}' % oss_sftp_address
+            if success and 'oss_sftp_port' in reqs:
+                oss_sftp_port = int(reqs['oss_sftp_port'][0])
+                if oss_sftp_port < 0:
+                    success = False
+                    data = '{"res":"fail, ilegal oss sftp port: %d"}' % oss_sftp_port
+            if success and 'oss_sftp_loglevel' in reqs:
+                oss_sftp_loglevel = reqs['oss_sftp_loglevel'][0].strip().upper()
+                if (oss_sftp_loglevel not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']):
+                    success = False
+                    data = '{"res":"fail, illegal oss sftp log level: %s. Must be: DEBUG, INFO, WARNING, ERROR, CRITICAL"}' % oss_sftp_loglevel
+            if success and 'oss_sftp_bucketendpoints' in reqs:
+                oss_sftp_bucketendpoints = reqs['oss_sftp_bucketendpoints'][0].strip()
+            if success and 'oss_sftp_enable' in reqs:
+                oss_sftp_enable = int(reqs['oss_sftp_enable'][0])
+                if oss_sftp_enable != 0 and oss_sftp_enable != 1:
+                    success = False
+                    data = '{"res":"fail, oss_sftp_enable:%s"}' % oss_sftp_enable
+            if success and 'oss_sftp_buff_size' in reqs:
+                oss_sftp_buff_size = int(reqs['oss_sftp_buff_size'][0])
+                if oss_sftp_buff_size < 0:
+                    success = False
+                    data = '{"res":"fail, ilegal oss-sftp buff_size: %d"}' % oss_sftp_buff_size
                 
             if success:
                 config.set(["modules", "launcher", "popup_webui"], popup_webui)
                 config.set(["modules", "launcher", "show_systray"], show_systray)
                 config.set(["modules", "launcher", "auto_start"], auto_start)
                 config.set(["modules", "launcher", "language"], language)
+                config.set(["modules", "launcher", "oss_protocol"], oss_protocol)
                 config.set(["modules", "ossftp", "address"], ossftp_address)
                 config.set(["modules", "ossftp", "port"], ossftp_port)
                 config.set(["modules", "ossftp", "log_level"], ossftp_loglevel)
                 config.set(["modules", "ossftp", "bucket_endpoints"], ossftp_bucketendpoints)
                 config.set(["modules", "ossftp", "passive_ports_start"], passive_ports_start)
                 config.set(["modules", "ossftp", "passive_ports_end"], passive_ports_end)
+                config.set(["modules", "ossftp", "enable"], ossftp_enable)
+
+                config.set(["modules", "ossftp", "buff_size"], ossftp_buff_size)
+                config.set(["modules", "osssftp", "address"], oss_sftp_address)
+                config.set(["modules", "osssftp", "port"], oss_sftp_port)
+                config.set(["modules", "osssftp", "log_level"], oss_sftp_loglevel)
+                config.set(["modules", "osssftp", "bucket_endpoints"], oss_sftp_bucketendpoints)
+                config.set(["modules", "osssftp", "enable"], oss_sftp_enable)
+                config.set(["modules", "osssftp", "buff_size"], oss_sftp_buff_size)
                 config.save()
                 if auto_start:
                     autorun.enable()
@@ -354,21 +452,26 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 launcher_log.info('Set config: %s', json.dumps(tmp_config, sort_keys=True, separators=(',', ':'), indent=2))
             else:
                 launcher_log.error(data)
-
+        print(data)
         self.send_response('text/html', data)
 
     def req_log_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''
 
         cmd = "get_last"
+        module = "ftp"
         if reqs["cmd"]:
             cmd = reqs["cmd"][0]
-        
+        if reqs["log_module"]:
+            module = reqs["log_module"][0]
+
         if cmd == "get_new":
+            tailer = ossftp_log_tailer if module == 'ftp' else osssftp_log_tailer
             last_no = int(reqs["last_no"][0])
-            data = ossftp_log_tailer.get_lines(last_no)
+            last_pos = int(reqs["last_pos"][0])
+            data = tailer.get_lines(last_no, last_pos)
         else:
             data = '{"res":"fail", "reason":"wrong cmd: %s"%cmd}'
 
@@ -376,8 +479,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response(mimetype, data)
         
     def req_download_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs['cmd'] == ['get_progress']:
@@ -386,8 +489,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response('text/html', data)
 
     def req_init_module_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''
 
         try:
@@ -432,8 +535,8 @@ def stop():
 
 
 def http_request(url, method="GET"):
-    proxy_handler = urllib2.ProxyHandler({})
-    opener = urllib2.build_opener(proxy_handler)
+    proxy_handler = ProxyHandler({})
+    opener = build_opener(proxy_handler)
     try:
         req = opener.open(url, timeout=30)
         return req

@@ -64,8 +64,7 @@ def basicConfig(*args, **kwargs):
 
 def log(level, fmt, *args, **kwargs):
     string = '%s - [%s] %s\n' % (time.ctime()[4:-5], level, fmt % args)
-    #print string
-    sys.stderr.write(string)
+    print(string)
     log_fd.write(string)
     try:
         log_fd.flush()
@@ -98,7 +97,7 @@ def error(fmt, *args, **kwargs):
 
 def exception(fmt, *args, **kwargs):
     error(fmt, *args, **kwargs)
-    sys.stderr.write(traceback.format_exc() + '\n')
+    print(traceback.format_exc() + '\n')
 
 def critical(fmt, *args, **kwargs):
     __set_error_color()

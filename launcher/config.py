@@ -1,13 +1,13 @@
 
 import os
-import launcher_log
-
-
+import sys
 import json
-from distutils.version import LooseVersion
-
 
 current_path = os.path.dirname(os.path.abspath(__file__))
+if current_path not in sys.path:
+    sys.path.append(current_path)
+import launcher_log
+
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 data_path = os.path.join(root_path, 'data')
 config_path = os.path.join(root_path, 'config.json')
@@ -19,20 +19,21 @@ ACCESS_SECRET = "access_secret"
 BUCKET_NAME = "bucket_name"
 HOME_DIR = "home_dir"
 
+
 config = {}
 def load():
     global config, config_path
     try:
-        config = json.load(file(config_path, 'r'))
+        config = json.load(open(config_path, 'r'))
         #print json.dumps(config, sort_keys=True, separators=(',',':'), indent=4)
     except Exception as  exc:
-        print "Error in configuration file:", exc
+        print("Error in configuration file:", exc)
 
 
 def save():
     global config, config_path
     try:
-        json.dump(config, file(config_path, "w"), sort_keys=True, separators=(',',':'), indent=2)
+        json.dump(config, open(config_path, "w"), sort_keys=True, separators=(',',':'), indent=2)
     except Exception as e:
         launcher_log.warn("save config %s fail %s", config_path, e)
 
@@ -82,7 +83,21 @@ def recheck_module_path():
     if get(["modules", "launcher", "language"], "") == "":
         need_save_config = True
         set(["modules", "launcher", "language"], "cn")
+    if get(["modules", "ossftp", "enable"], -1) == -1:
+        need_save_config = True
+        set(["modules", "ossftp", "enable"], 1)
 
+    if get(["modules", "osssftp", "address"], -1) == -1:
+        need_save_config = True
+        set(["modules", "osssftp", "address"], "127.0.0.1")
+
+    if get(["modules", "osssftp", "port"], -1) == -1:
+        need_save_config = True
+        set(["modules", "osssftp", "port"], 50000)
+
+    if get(["modules", "osssftp", "enable"], -1) == -1:
+        need_save_config = True
+        set(["modules", "osssftp", "enable"], 0)
 
 
     accounts = get(["modules", "accounts"], [])
@@ -111,6 +126,9 @@ def create_data_path():
     data_ossftp_path = os.path.join(data_path, 'ossftp')
     if not os.path.isdir(data_ossftp_path):
         os.mkdir(data_ossftp_path)
+    data_osssftp_path = os.path.join(data_path, 'osssftp')
+    if not os.path.isdir(data_osssftp_path):
+        os.mkdir(data_osssftp_path)
 
 
 def get_account_info(login_username, login_password):

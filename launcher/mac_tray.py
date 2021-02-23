@@ -3,6 +3,7 @@
 
 import os
 import sys
+from oss2.compat import str
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -49,7 +50,7 @@ class MacTrayObject(NSObject):
         self.menu.addItem_(menuitem)
 
         # Rest Menu Item
-        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Restart OSS-FTP', 'restartOssFtp:', '')
+        menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Restart OSS-FTP/SFTP', 'restartOssFtp:', '')
         self.menu.addItem_(menuitem)
         # Default event
         menuitem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_('Quit', 'windowWillClose:', '')
@@ -74,13 +75,13 @@ class MacTrayObject(NSObject):
     #Note: the function name for action can include '_'
     # limited by Mac cocoa
     def restartOssFtp_(self, _):
-        module_init.stop('ossftp')
-        module_init.start('ossftp')
+        module_init.stop_all()
+        module_init.start_all_auto()
 
 class Mac_tray():
     def dialog_yes_no(self, msg="msg", title="Title", data=None, callback=None):
-        msg = unicode(msg)
-        title = unicode(title)
+        msg = str(msg)
+        title = str(title)
         alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
             title, "OK", "Cancel", None, msg)
         alert.setAlertStyle_(0)  # informational style

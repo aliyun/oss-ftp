@@ -8,10 +8,10 @@ _months_map = {1:'Jan', 2:'Feb', 3:'Mar', 4:'Apr', 5:'May', 6:'Jun', 7:'Jul',
                8:'Aug', 9:'Sep', 10:'Oct', 11:'Nov', 12:'Dec'}
 from pyftpdlib.filesystems import AbstractedFS
 
-import oss_fs_impl 
+import oss_fs_impl
 
 class OssFS(AbstractedFS):
-    
+
     def __init__(self, root, cmd_channel):
         assert isinstance(root, unicode), root
         AbstractedFS.__init__(self, root, cmd_channel)
@@ -20,10 +20,10 @@ class OssFS(AbstractedFS):
             index = bucket_name.find('/')
             bucket_name = bucket_name[:index]
         bucket_info = cmd_channel.authorizer.get_bucket_info(bucket_name)
-        access_key_id, access_key_secret= bucket_info.access_key.items()[0]
+        access_key_id, access_key_secret= list(bucket_info.access_key.items())[0]
         endpoint = bucket_info.endpoint
         self.oss_fs_impl = oss_fs_impl.OssFsImpl(bucket_name, endpoint, access_key_id, access_key_secret)
-    
+
     def open(self, filename, mode):
         assert isinstance(filename, unicode), filename
         if mode.startswith('r') or mode.startswith('R'):
@@ -34,7 +34,7 @@ class OssFS(AbstractedFS):
     def chdir(self, path):
         assert isinstance(path, unicode), path
         if not self.isdir(path):
-            raise FilesystemError, 'Not a dir.'
+            raise FilesystemError('Not a dir.')
         path = path.replace('\\', '/')
         if not path.startswith(self.root):
             path = u'/'

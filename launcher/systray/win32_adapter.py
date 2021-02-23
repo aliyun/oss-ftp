@@ -160,9 +160,7 @@ def PackMENUITEMINFO(text=None, hbmpItem=None, wID=None, hSubMenu=None, fState=f
     res = MENUITEMINFO()
     res.cbSize = ctypes.sizeof(res)
     res.fMask = 1
-
-
-    res.fState  = fState
+    res.fState = fState
     if hbmpItem is not None:
         res.fMask |= MIIM_BITMAP
         res.hbmpItem = hbmpItem
