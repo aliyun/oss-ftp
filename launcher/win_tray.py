@@ -2,13 +2,20 @@
 # coding:utf-8
 
 
-if __name__ == "__main__":
-    import os, sys
-    current_path = os.path.dirname(os.path.abspath(__file__))
-    python_path = os.path.abspath( os.path.join(current_path, os.pardir, 'python27', 'win32'))
-    noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
-    sys.path.append(noarch_lib)
-    win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+import os, sys
+
+is_py2 = (sys.version_info[0] == 2)
+if is_py2:
+    python_dir = "python27"
+    import _winreg as winreg
+else:
+    python_dir = "python36"
+    import winreg
+
+current_path = os.path.dirname(os.path.abspath(__file__))
+python_path = os.path.abspath( os.path.join(current_path, os.pardir, python_dir, 'win32'))
+win32_lib = os.path.abspath( os.path.join(python_path, 'lib', 'win32'))
+if win32_lib not in sys.path:
     sys.path.append(win32_lib)
 
 import webbrowser
@@ -16,12 +23,8 @@ from systray import SysTrayIcon
 import systray.win32_adapter as win32_adapter
 import os
 import ctypes
-import _winreg as winreg
 import win32_proxy_manager
-
 import module_init
-import launcher_log
-
 
 class Win_tray():
     def __init__(self):

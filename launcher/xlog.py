@@ -1,5 +1,12 @@
 import threading
 import json
+import sys
+
+is_py2 = (sys.version_info[0] == 2)
+if is_py2:
+    str = unicode
+else:
+    str = str
 
 class LogFileTailer:
     def __init__(self, file_name):
@@ -16,7 +23,7 @@ class LogFileTailer:
         file.seek(self.mLastPos, 0)
         for line in file:
             try:
-                jd[from_no] = unicode(line, errors='replace')
+                jd[from_no] = str(line)
             except:
                 jd[from_no] = ""
             from_no += 1

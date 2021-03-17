@@ -1,13 +1,13 @@
 
 import os
-import launcher_log
-
-
+import sys
 import json
-from distutils.version import LooseVersion
-
 
 current_path = os.path.dirname(os.path.abspath(__file__))
+if current_path not in sys.path:
+    sys.path.append(current_path)
+import launcher_log
+
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 data_path = os.path.join(root_path, 'data')
 config_path = os.path.join(root_path, 'config.json')
@@ -23,16 +23,16 @@ config = {}
 def load():
     global config, config_path
     try:
-        config = json.load(file(config_path, 'r'))
+        config = json.load(open(config_path, 'r'))
         #print json.dumps(config, sort_keys=True, separators=(',',':'), indent=4)
     except Exception as  exc:
-        print "Error in configuration file:", exc
+        print("Error in configuration file:", exc)
 
 
 def save():
     global config, config_path
     try:
-        json.dump(config, file(config_path, "w"), sort_keys=True, separators=(',',':'), indent=2)
+        json.dump(config, open(config_path, "w"), sort_keys=True, separators=(',',':'), indent=2)
     except Exception as e:
         launcher_log.warn("save config %s fail %s", config_path, e)
 

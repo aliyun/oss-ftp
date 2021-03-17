@@ -2,15 +2,56 @@
 
 import os, sys
 import re
-import SocketServer, socket, ssl
-import BaseHTTPServer
+import socket, ssl
 import errno
-import urlparse
 import threading
-import urllib2
 import time
 import datetime
 from xlog import LogFileTailer
+
+is_py2 = (sys.version_info[0] == 2)
+if is_py2:
+    import SocketServer
+    import BaseHTTPServer
+    from urlparse import urlparse
+    from urlparse import parse_qs
+    import urllib2
+    from urllib2 import ProxyHandler
+    from urllib2 import build_opener
+
+    def to_unicode(data):
+        if isinstance(data, bytes):
+            return data.decode('utf-8')
+        else:
+            return data
+
+    def to_bytes(data):
+        if isinstance(data, unicode):
+            return data.encode('utf-8')
+        else:
+            return data
+else:
+    import socketserver as SocketServer
+    import http.server as BaseHTTPServer
+    from urllib.parse import urlparse
+    from urllib.parse import parse_qs
+    from urllib.request import ProxyHandler
+    from urllib.request import build_opener
+
+    def to_bytes(data):
+        if isinstance(data, str):
+            return data.encode(encoding='utf-8')
+        else:
+            return data
+
+    def to_string(data):
+        if isinstance(data, bytes):
+            return data.decode('utf-8')
+        else:
+            return data
+
+    def to_unicode(data):
+        return to_string(data)
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath(os.path.join(current_path, os.pardir))
@@ -78,11 +119,15 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             menu_path = os.path.join(root_path, module, "web_ui", _menu_file)
             if not os.path.isfile(menu_path):
                 continue
-                
-            module_menu = json.load(file(menu_path, 'r'))          
-            module_menus[module] = module_menu
+            if is_py2:
+                module_menu = json.load(open(menu_path, 'r'))
+                module_menus[module] = module_menu
+            else:
+                with open(menu_path, 'r', encoding='utf-8') as f:
+                    module_menu = json.load(f)
+                    module_menus[module] = module_menu
 
-        module_menus = sorted(module_menus.iteritems(), key=lambda (k,v): (v['menu_sort_id']))
+        module_menus = sorted(module_menus.items(), key=lambda k_v: (k_v[1]['menu_sort_id']))
         #for k,v in self.module_menus:
         #    logging.debug("m:%s id:%d", k, v['menu_sort_id'])
 
@@ -91,11 +136,11 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def send_response(self, mimetype, data):
         self.wfile.write(('HTTP/1.1 200\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %s\r\n\r\n' % (mimetype, len(data))).encode())
-        self.wfile.write(data)
+        self.wfile.write(to_bytes(data))
     def send_not_found(self):
         self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Not Found')
     def do_POST(self):
-        #url_path = urlparse.urlparse(self.path).path
+        #url_path = urlparse(self.path).path
         url_path_list = self.path.split('/')
         if len(url_path_list) >= 3 and url_path_list[1] == "module":
             module = url_path_list[2]
@@ -113,7 +158,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
         try:
             refer = self.headers.getheader('Referer')
-            netloc = urlparse.urlparse(refer).netloc
+            netloc = urlparse(refer).netloc
             if not netloc.startswith("127.0.0.1") and not netloc.startswitch("localhost"):
                 launcher_log.warn("web control ref:%s refuse", netloc)
                 return
@@ -126,7 +171,7 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             launcher_log.warn('%s %s %s haking', self.address_string(), self.command, self.path )
             return
 
-        url_path = urlparse.urlparse(self.path).path
+        url_path = urlparse(self.path).path
         if url_path == '/':
             return self.req_index_handler()
 
@@ -196,8 +241,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write(b'HTTP/1.1 404\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404 Open file fail')
 
     def req_index_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         try:
             target_module = reqs['module'][0]
             target_menu = reqs['menu'][0]
@@ -235,12 +280,12 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         right_content_file = os.path.join(root_path, target_module, "web_ui", target_menu + _html_file_suffix)
         if os.path.isfile(right_content_file):
-            with open(right_content_file, "r") as f:
+            with open(right_content_file, "rb") as f:
                 right_content = f.read()
         else:
             right_content = ""
 
-        data = (index_content.decode('utf-8') % (menu_content, right_content.decode('utf-8') )).encode('utf-8')
+        data = to_bytes(to_unicode(index_content) % (menu_content, to_unicode(right_content)))
         self.send_response('text/html', data)
     
     def ip_check(self, ip_str):
@@ -251,8 +296,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
             return False
 
     def req_config_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''        
 
         if reqs['cmd'] == ['get_config']:
@@ -305,13 +350,13 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 ossftp_address = reqs['ossftp_address'][0].strip()
                 if not self.ip_check(ossftp_address):
                     success = False
-                    data = '{"res":"fail, illegal ossftp address: %s"}' % ossftp_address
+                    data = '{"res":"fail, ilegal ossftp address: %s"}' % ossftp_address
  
             if success and 'ossftp_port' in reqs:
                 ossftp_port = int(reqs['ossftp_port'][0])
                 if ossftp_port < 0:
                     success = False
-                    data = '{"res":"fail, illegal ossftp port: %d"}' % ossftp_port
+                    data = '{"res":"fail, ilegal ossftp port: %d"}' % ossftp_port
             if success and 'ossftp_loglevel' in reqs:
                 ossftp_loglevel = reqs['ossftp_loglevel'][0].strip().upper()
                 if (ossftp_loglevel not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']):
@@ -358,8 +403,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response('text/html', data)
 
     def req_log_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''
 
         cmd = "get_last"
@@ -376,8 +421,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response(mimetype, data)
         
     def req_download_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''
 
         if reqs['cmd'] == ['get_progress']:
@@ -386,8 +431,8 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response('text/html', data)
 
     def req_init_module_handler(self):
-        req = urlparse.urlparse(self.path).query
-        reqs = urlparse.parse_qs(req, keep_blank_values=True)
+        req = urlparse(self.path).query
+        reqs = parse_qs(req, keep_blank_values=True)
         data = ''
 
         try:
@@ -432,8 +477,8 @@ def stop():
 
 
 def http_request(url, method="GET"):
-    proxy_handler = urllib2.ProxyHandler({})
-    opener = urllib2.build_opener(proxy_handler)
+    proxy_handler = ProxyHandler({})
+    opener = build_opener(proxy_handler)
     try:
         req = opener.open(url, timeout=30)
         return req

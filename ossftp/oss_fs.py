@@ -20,7 +20,7 @@ class OssFS(AbstractedFS):
             index = bucket_name.find('/')
             bucket_name = bucket_name[:index]
         bucket_info = cmd_channel.authorizer.get_bucket_info(bucket_name)
-        access_key_id, access_key_secret= bucket_info.access_key.items()[0]
+        access_key_id, access_key_secret= list(bucket_info.access_key.items())[0]
         endpoint = bucket_info.endpoint
         self.oss_fs_impl = oss_fs_impl.OssFsImpl(bucket_name, endpoint, access_key_id, access_key_secret)
     
@@ -34,7 +34,7 @@ class OssFS(AbstractedFS):
     def chdir(self, path):
         assert isinstance(path, unicode), path
         if not self.isdir(path):
-            raise FilesystemError, 'Not a dir.'
+            raise FilesystemError('Not a dir.')
         path = path.replace('\\', '/')
         if not path.startswith(self.root):
             path = u'/'

@@ -6,12 +6,15 @@ import os
 import sys
 import launcher_log
 
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 
 if sys.platform == 'win32':
-    import _winreg
+    is_py2 = (sys.version_info[0] == 2)
+    if is_py2:
+        import _winreg
+    else:
+        import winreg as _winreg
     _registry = _winreg.ConnectRegistry(None, _winreg.HKEY_CURRENT_USER)
     def get_runonce():
         return _winreg.OpenKey(_registry,
