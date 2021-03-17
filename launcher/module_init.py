@@ -16,8 +16,6 @@ root_path = os.path.abspath( os.path.join(current_path, os.pardir))
 if root_path not in sys.path:
     sys.path.append(root_path)
 
-from ossftp.ftpd import FTPd
-
 def start(module):
     if not os.path.isdir(os.path.join(root_path, module)):
         return
@@ -49,11 +47,9 @@ def start(module):
                 return "fail"
             cmd = [sys.executable, script_path, "--listen_address=%s"%address, "--port=%d"%port, "--passive_ports_start=%d"%passive_ports_start,
                 "--passive_ports_end=%d"%passive_ports_end,"--loglevel=%s"%log_level, "--bucket_endpoints=%s"%bucket_endpoints]
-            print cmd
+            print(cmd)
             proc_handler[module]["proc"] = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            #t = FTPd(masquerade_address, address, port, bucket_endpoints, is_internal, log_level)
-            #t.start()
-            #proc_handler[module]["proc"] = t
+
         else:
             raise ValueError("Wrong module: %s" % module)
         

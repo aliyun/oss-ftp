@@ -1,24 +1,6 @@
 # -*- coding: utf-8 -*-
 import os, sys
 
-current_path = os.path.dirname(os.path.abspath(__file__))
-root_path = os.path.abspath( os.path.join(current_path, os.pardir))
-if root_path not in sys.path:
-    sys.path.append(root_path)
-
-if sys.platform.startswith("linux"):
-    python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib"))
-    sys.path.append(python_lib_path)
-elif sys.platform == "darwin":
-    python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib"))
-    sys.path.append(python_lib_path)
-    extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjc"
-    sys.path.append(extra_lib)
-elif sys.platform == "win32":
-    pass
-else:
-    raise RuntimeError("detect platform fail:%s" % sys.platform)
-
 import time
 import logging
 
@@ -26,6 +8,7 @@ from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.authorizers import AuthenticationFailed
 from pyftpdlib.authorizers import AuthorizerError
 import oss2
+from oss2.compat import str
 
 import defaults
 from launcher import config
@@ -153,7 +136,7 @@ class OssAuthorizer(DummyAuthorizer):
         bucket_list = res.buckets
         for bucket in bucket_list:
             if bucket.name == bucket_name:
-                endpoint = self.get_endpoint(bucket_name, bucket.location.decode('utf-8'), access_key_id, access_key_secret)
+                endpoint = self.get_endpoint(bucket_name, str(bucket.location), access_key_id, access_key_secret)
                 return endpoint
         raise AuthenticationFailed("can't find the bucket %s when list buckets." % bucket_name) 
 

@@ -1,13 +1,23 @@
 # -*- coding: utf-8 -*-
 import os, sys
 
+is_py3 = (sys.version_info[0] == 3)
+python_dir = "python27"
+if is_py3:
+    python_dir = "python36"
+
 current_path = os.path.dirname(os.path.abspath(__file__))
 root_path = os.path.abspath( os.path.join(current_path, os.pardir))
+if root_path not in sys.path:
+    sys.path.append(root_path)
+if current_path not in sys.path:
+    sys.path.append(current_path)
+
 if sys.platform.startswith("linux"):
-    python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib"))
+    python_lib_path = os.path.abspath( os.path.join(root_path, python_dir, "unix", "lib"))
     sys.path.append(python_lib_path)
 elif sys.platform == "darwin":
-    python_lib_path = os.path.abspath( os.path.join(root_path, "python27", "unix", "lib"))
+    python_lib_path = os.path.abspath( os.path.join(root_path, python_dir, "unix", "lib"))
     sys.path.append(python_lib_path)
     extra_lib = "/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjc"
     sys.path.append(extra_lib)
@@ -69,14 +79,14 @@ def start_ftp(masquerade_address, listen_address, port, log_level, bucket_endpoi
     elif log_level == "CRITICAL":
         level = logging.CRITICAL
     else:
-        print "wrong loglevel parameter: %s" % log_level
+        print("wrong loglevel parameter: %s" % log_level)
         exit(1)
 
     authorizer = OssAuthorizer()
     if bucket_endpoints != "":
         for url in bucket_endpoints.strip().split(','):
             if len(url.split('.', 1)) != 2:
-                print "url:%s format error." % (url)
+                print("url:%s format error." % (url))
                 continue
             bucket_name, endpoint = url.strip().split('.', 1)
             authorizer.bucket_endpoints[bucket_name] = endpoint
@@ -112,7 +122,7 @@ def main(args, opts):
         try:
             port = int(opts.port)
         except ValueError:
-            print "invalid FTP port, please input a valid port like --port=2048"
+            print("invalid FTP port, please input a valid port like --port=2048")
             exit(1)
 
     if opts.loglevel:
@@ -128,28 +138,28 @@ def main(args, opts):
         try:
             passive_ports_start = int(opts.passive_ports_start)
         except ValueError:
-            print "invalid FTP passive_ports_start, please input a valid port like --passive_ports_start=50000"
+            print("invalid FTP passive_ports_start, please input a valid port like --passive_ports_start=50000")
             exit(1)
 
     if opts.passive_ports_end:
         try:
             passive_ports_end = int(opts.passive_ports_end)
         except ValueError:
-            print "invalid FTP passive_ports_end, please input a valid port like --passive_ports_end=60000"
+            print("invalid FTP passive_ports_end, please input a valid port like --passive_ports_end=60000")
             exit(1)
     
     if (passive_ports_start and not passive_ports_end) or (not passive_ports_start and passive_ports_end):
-        print "Youd should specify both start and end of passive_ports"
+        print("Youd should specify both start and end of passive_ports")
         exit(1)
     if passive_ports_start and passive_ports_end:
         if passive_ports_start <=0:
-            print "passive_ports_start should >=1"
+            print("passive_ports_start should >=1")
             exit(1)
         elif passive_ports_end >= 65536:
-            print "passive_ports_end should <= 65535"
+            print("passive_ports_end should <= 65535")
             exit(1)
         elif passive_ports_start > passive_ports_end:
-            print "passive_ports_start should <= passive_ports_end"
+            print("passive_ports_start should <= passive_ports_end")
             exit(1)
         passive_ports = range(passive_ports_start, passive_ports_end) 
     start_ftp(masquerade_address, listen_address, port, log_level, bucket_endpoints, internal, passive_ports)
