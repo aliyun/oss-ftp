@@ -82,12 +82,14 @@ def main():
     web_control.confirm_ossftp_exit()
 
     module_init.start_all_auto()
-
-    web_control.start()
+    control_port = config.get(["modules", "launcher", "control_port"], 8192)
+    web_control.start({
+        "port": control_port
+    })
 
 
     if has_desktop and config.get(["modules", "launcher", "popup_webui"], 1) == 1:
-        webbrowser.open("http://127.0.0.1:8192/")
+        webbrowser.open("http://127.0.0.1:%d" % control_port)
 
     if config.get(["modules", "launcher", "show_systray"], 1):
         sys_tray.serve_forever()
