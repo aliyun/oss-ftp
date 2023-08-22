@@ -71,6 +71,11 @@ NetWorkIOError = (socket.error, ssl.SSLError, OSError)
 
 class LocalServer(SocketServer.ThreadingTCPServer):
     allow_reuse_address = True
+    def __init__(self, server, handler):
+        super().__init__(server, handler)
+        self.port = server[1] if server[1] == None else 8192
+    def get_port(self):
+        return self.port
 
     def close_request(self, request):
         try:
@@ -456,9 +461,15 @@ class Http_Handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 process = 0
 server = 0
-def start():
+def start(opts):
+    """
+        port: number, default 8192
+    """
     global process, server
-    server = LocalServer(("0.0.0.0", 8192), Http_Handler)
+    port = 8192
+    if opts.get('port'):
+        port = opts.get('port')
+    server = LocalServer(("0.0.0.0", port), Http_Handler)
     process = threading.Thread(target=server.serve_forever)
     process.setDaemon(True)
     process.start()
@@ -487,9 +498,12 @@ def http_request(url, method="GET"):
         return False
 
 def confirm_ossftp_exit():
+    global server
+    if server == 0:
+        return True
     launcher_log.debug("start confirm_ossftp_exit")
     for i in range(30):
-        if http_request("http://127.0.0.1:8192/quit") == False:
+        if http_request("http://127.0.0.1:%d/quit" % server.get_port()) == False:
             return True
         time.sleep(1)
     launcher_log.debug("finished confirm_ossftp_exit")
